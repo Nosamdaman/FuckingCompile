@@ -1,0 +1,4 @@
+# Which files/folders to ignore in git
+.vscode
+obj
+bin
