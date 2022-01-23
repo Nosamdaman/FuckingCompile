@@ -1,0 +1,48 @@
+namespace jfc
+{
+    /// <summary> The types of tokens in the language </summary>
+    public enum TokenType
+    {
+        PERIOD,
+        SEMICOLON,
+        COMMA,
+        L_PAREN,
+        R_PAREN,
+        L_BRACKET,
+        R_BRACKET,
+        AND,
+        OR,
+        PLUS,
+        MINUS,
+        TIMES,
+        DIVIDE,
+        GT,
+        GT_EQ,
+        LT,
+        LT_EQ,
+        EQ,
+        NEQ,
+        PROGRAM_RW,
+        IS_RW,
+        BEGIN_RW,
+        END_RW,
+        GLOBAL_RW,
+        PROCEDURE_RW,
+        VARIABLE_RW,
+        INTEGER_RW,
+        FLOAT_RW,
+        STRING_RW,
+        BOOL_RW,
+        IF_RW,
+        THEN_RW,
+        ELSE_RW,
+        FOR_RW,
+        RETURN_RW,
+        NOT_RW,
+        TRUE_RW,
+        FALSE_RW,
+        NUMBER,
+        STRING,
+        IDENTIFIER
+    }
+}
