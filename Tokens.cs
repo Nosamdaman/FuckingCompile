@@ -45,4 +45,25 @@ namespace jfc
         STRING,
         IDENTIFIER
     }
+
+    /// <summary> Represents a token in the program </summary>
+    public class Token
+    {
+        private readonly TokenType _tokenType;
+
+        /// <summary> Class constructor </summary>
+        /// <param name="tokenType"> The type of the new token </param>
+        /// <param name="tokenMark"> (Optional) additional information about the token </param>
+        public Token(TokenType tokenType, object tokenMark = null)
+        {
+            _tokenType = tokenType;
+            TokenMark = tokenMark;
+        }
+
+        /// <summary> The type of the token </summary>
+        public TokenType TokenType => _tokenType;
+
+        /// <summary> Extra information about the token </summary>
+        public object TokenMark { get; set; } = null;
+    }
 }
