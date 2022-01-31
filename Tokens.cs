@@ -43,7 +43,8 @@ namespace jfc
         FALSE_RW,
         NUMBER,
         STRING,
-        IDENTIFIER
+        IDENTIFIER,
+        EOF
     }
 
     /// <summary> Represents a token in the program </summary>
