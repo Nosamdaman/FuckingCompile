@@ -121,6 +121,30 @@ namespace jfc {
                 }
             }
 
+            // Now we'll handle string literals
+            if (cur == '"') {
+                StringBuilder sb = new();
+                bool endOfString = false;
+                while (!endOfString) {
+                    cur = _sr.Read();
+                    switch (cur) {
+                    case -1:
+                        return new(TokenType.EOF);
+                    case '"':
+                        endOfString = true;
+                        break;
+                    case '\n':
+                        _lineCount++;
+                        sb.Append((char) cur);
+                        break;
+                    default:
+                        sb.Append((char) cur);
+                        break;
+                    }
+                }
+                return new(TokenType.STRING, sb.ToString());
+            }
+
             // Now we'll handle the "/" symbol. This can either mean division or be the start of a comment.
             if (cur == '/') {
                 if (_sr.Peek() == '/') {
