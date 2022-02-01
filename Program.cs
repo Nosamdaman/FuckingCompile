@@ -14,7 +14,7 @@ namespace jfc {
             "  -h --help     Show this screen\n" +
             "  -v --version  Show version information\n";
         
-        private const string _versionText = "v0.0.1";
+        private const string _versionText = "v0.1.0";
 
         /// <summary> Main entry-point function </summary>
         /// <param name="args"> Ordered list of all command-line arguments passed in </param>
