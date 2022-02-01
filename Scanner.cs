@@ -29,7 +29,7 @@ namespace jfc {
         /// <exception cref="ArgumentNullException"/>
         public Scanner(FileStream fs) {
             if (fs is null) throw new ArgumentNullException(nameof(fs));
-            _sr = new StreamReader(fs);
+            _sr = new StreamReader(fs, leaveOpen: true);
         }
 
         /// <summary> Reads until resolving the next token and returns it </summary>
