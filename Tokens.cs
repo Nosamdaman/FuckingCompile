@@ -4,6 +4,8 @@ namespace jfc {
         PERIOD,
         SEMICOLON,
         COMMA,
+        COLON,
+        ASSIGN,
         L_PAREN,
         R_PAREN,
         L_BRACKET,
@@ -39,7 +41,8 @@ namespace jfc {
         NOT_RW,
         TRUE_RW,
         FALSE_RW,
-        NUMBER,
+        INTEGER,
+        FLOAT,
         STRING,
         IDENTIFIER,
         EOF
