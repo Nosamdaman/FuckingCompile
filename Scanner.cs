@@ -269,7 +269,7 @@ namespace jfc {
             }
 
             // If we've gotten this far, then the character is illegal. We'll send a message saying such and try again.
-            // TODO: ADD ERROR REPORTING
+            Console.WriteLine($"ERROR: Illegal character \"{(char) cur}\" on line {_lineCount}.");
             return Scan();
         }
     }
