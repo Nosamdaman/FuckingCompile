@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
 
-namespace jfc
-{
+namespace jfc {
     /// <summary> The main entry-point class for the application </summary>
-    class Program
-    {
+    class Program {
         private const string _helpText =
             "Just Fucking Compile - a compiler by Mason Davy\n\n" +
             "Usage:\n" +
@@ -20,11 +18,9 @@ namespace jfc
 
         /// <summary> Main entry-point function </summary>
         /// <param name="args"> Ordered list of all command-line arguments passed in </param>
-        static void Main(string[] args)
-        {
+        static void Main(string[] args) {
             // First check the number of argumnets
-            if (args.Length == 0)
-            {
+            if (args.Length == 0) {
                 Console.WriteLine("ERROR: No file specified");
                 Console.WriteLine(_helpText);
                 Environment.ExitCode = 1;
@@ -34,8 +30,7 @@ namespace jfc
             }
 
             // Handle non source-file inputs
-            if (args[0] == "-h" || args[0] == "--help")
-            {
+            if (args[0] == "-h" || args[0] == "--help") {
                 Console.WriteLine(_helpText);
                 return;
             } else if (args[0] == "-v" || args[0] == "--version") {
@@ -45,12 +40,9 @@ namespace jfc
 
             // Try to open the indicated file
             FileStream fs = null;
-            try
-            {
+            try {
                 fs = File.OpenRead(args[0]);
-            }
-            catch (Exception)
-            {
+            } catch (Exception) {
                 Console.WriteLine($"ERROR: Unable to open the file \"{args[0]}\" for reading, aborting now");
                 Environment.ExitCode = 1;
                 return;

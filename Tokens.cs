@@ -1,8 +1,6 @@
-namespace jfc
-{
+namespace jfc {
     /// <summary> The types of tokens in the language </summary>
-    public enum TokenType
-    {
+    public enum TokenType {
         PERIOD,
         SEMICOLON,
         COMMA,
