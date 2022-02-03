@@ -39,7 +39,7 @@ namespace jfc {
             }
 
             // Try to open the indicated file
-            FileStream fs = null;
+            FileStream fs;
             try {
                 fs = File.OpenRead(args[0]);
             } catch (Exception) {
@@ -48,7 +48,14 @@ namespace jfc {
                 return;
             }
 
-            // Do shit
+            // Test code, we'll dump everything the scanner sees here
+            using (Scanner scanner = new(fs)) {
+                Token curToken = scanner.Scan();
+                while (curToken.TokenType != TokenType.EOF) {
+                    Console.WriteLine($"Line Count: {scanner.LineCount,3}   | Token Type: {curToken.TokenType,-15}| Token Mark: {curToken.TokenMark}");
+                    curToken = scanner.Scan();
+                }
+            }
 
             // Close the file
             fs.Close();

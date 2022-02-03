@@ -149,7 +149,7 @@ namespace jfc {
                 if (_sr.Peek() == '/') {
                     // We'll continue to read until we reach a newline or EOF, at which point we'll start over
                     _sr.Read();
-                    while(_sr.Peek() != '\n' || _sr.Peek() != -1) _sr.Read();
+                    while(_sr.Peek() != '\n' && _sr.Peek() != -1) _sr.Read();
                     return Scan();
                 } else if (_sr.Peek() == '*') {
                     // We'll read until we reach the escape comment symbol, making sure to track nesting
