@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 
 namespace jfc {
@@ -30,14 +31,37 @@ namespace jfc {
             return _curToken;
         }
 
+        private ParseInfo StatementList(TokenType[] exitTokens) {
+            // Loop to look for statements
+            while (!exitTokens.Contains(_curToken.TokenType)) {
+                ParseInfo status = Statement();
+                if (!status.Success) {
+                    _src.Report(MsgLevel.DEBUG, "Expected a statement", true);
+                    return new(false);
+                }
+                if (_curToken.TokenType != TokenType.SEMICOLON) {
+                    _src.Report(MsgLevel.ERROR, "Expected \";\" after statement", true);
+                    return new(false);
+                }
+                NextToken();
+            }
+            return new(true);
+        }
+
         private ParseInfo Statement() {
-            return _curToken.TokenType switch {
-                TokenType.IF_RW => IfStatement(),
-                TokenType.FOR_RW => LoopStatement(),
-                TokenType.RETURN_RW => ReturnStatement(),
-                TokenType.IDENTIFIER => AssignmentStatement(),
-                _ => new(false)
-            };
+            switch (_curToken.TokenType) {
+            case TokenType.IDENTIFIER:
+                return AssignmentStatement();
+            case TokenType.IF_RW:
+                return IfStatement();
+            case TokenType.FOR_RW:
+                return LoopStatement();
+            case TokenType.RETURN_RW:
+                return ReturnStatement();
+            default:
+                _src.Report(MsgLevel.ERROR, "Expected a statement", true);
+                return new(false);
+            }
         }
 
         private ParseInfo AssignmentStatement() {
@@ -113,8 +137,43 @@ namespace jfc {
             NextToken();
 
             // Then we reach the then clause
+            if (_curToken.TokenType != TokenType.THEN_RW) {
+                _src.Report(MsgLevel.ERROR, "Expected \"THEN\" after \")\"", true);
+                return new(false);
+            }
+            NextToken();
 
-            throw new NotImplementedException();
+            // Next we'll read statements until we reach the else or end
+            status = StatementList(new[] { TokenType.ELSE_RW, TokenType.END_RW, TokenType.EOF });
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expected statement list after \"THEN\"", true);
+                return new(false);
+            }
+
+            // We might have an else block
+            if (_curToken.TokenType == TokenType.ELSE_RW) {
+                // Next we'll read statements until we reach the end
+                status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
+                if (!status.Success) {
+                    _src.Report(MsgLevel.DEBUG, "Expected statement list after \"ELSE\"", true);
+                    return new(false);
+                }
+            }
+
+            // Now we should be at the end of the statement
+            if (_curToken.TokenType != TokenType.END_RW) {
+                _src.Report(MsgLevel.ERROR, "Expected \"END\" after the statement list", true);
+                return new(false);
+            }
+            NextToken();
+            if (_curToken.TokenType != TokenType.IF_RW) {
+                _src.Report(MsgLevel.ERROR, "Expected \"IF\" after \"END\"", true);
+            }
+            NextToken();
+
+            // We should be good to go
+            _src.Report(MsgLevel.DEBUG, "Parsed if statement", true);
+            return new(true);
         }
 
         private ParseInfo LoopStatement() {
