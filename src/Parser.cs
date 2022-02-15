@@ -30,6 +30,101 @@ namespace jfc {
             return _curToken;
         }
 
+        private ParseInfo Statement() {
+            return _curToken.TokenType switch {
+                TokenType.IF_RW => IfStatement(),
+                TokenType.FOR_RW => LoopStatement(),
+                TokenType.RETURN_RW => ReturnStatement(),
+                TokenType.IDENTIFIER => AssignmentStatement(),
+                _ => new(false)
+            };
+        }
+
+        private ParseInfo AssignmentStatement() {
+            ParseInfo status;
+
+            // We first need an identifier
+            if (_curToken.TokenType != TokenType.IDENTIFIER) {
+                _src.Report(MsgLevel.ERROR, "Expected an identifier as a destination", true);
+                return new(false);
+            }
+            NextToken();
+
+            // If we have a name, then we might have an indexing operation
+            if (_curToken.TokenType == TokenType.L_BRACKET) {
+                NextToken();
+                status = Expression();
+                if (!status.Success) {
+                    _src.Report(MsgLevel.ERROR, "Expression expected after \"[\"", true);
+                    return new(false);
+                }
+                if (_curToken.TokenType != TokenType.R_BRACKET) {
+                    _src.Report(MsgLevel.ERROR, "\"]\" expected after expression", true);
+                    return new(false);
+                }
+                NextToken();
+                _src.Report(MsgLevel.TRACE, "Parsed destination as name with indexing", true);
+            } else {
+                _src.Report(MsgLevel.TRACE, "Parsed destination as name", true);
+            }
+
+            // Next we need an assignment sign
+            if (_curToken.TokenType != TokenType.ASSIGN) {
+                _src.Report(MsgLevel.ERROR, "\":=\" expected after destination", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Finally we need an expression
+            status = Expression();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, "Expected an expression after \":=\"", true);
+                return new(false);
+            }
+
+            _src.Report(MsgLevel.DEBUG, "Parsed assignment statement", true);
+            return new(true);
+        }
+
+        private ParseInfo IfStatement() {
+            // First we need the if keyword
+            if (_curToken.TokenType != TokenType.IF_RW) {
+                _src.Report(MsgLevel.ERROR, "Expected an \"IF\"", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we need the conditional statement
+            if (_curToken.TokenType != TokenType.L_PAREN) {
+                _src.Report(MsgLevel.ERROR, "Expected \"(\" after \"IF\"", true);
+                return new(false);
+            }
+            NextToken();
+            ParseInfo status = Expression();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, "Expected an expression after \"(\"", true);
+                return new(false);
+            }
+            NextToken();
+            if (_curToken.TokenType != TokenType.R_PAREN) {
+                _src.Report(MsgLevel.ERROR, "Expected \")\" after expression", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we reach the then clause
+
+            throw new NotImplementedException();
+        }
+
+        private ParseInfo LoopStatement() {
+            throw new NotImplementedException();
+        }
+
+        private ParseInfo ReturnStatement() {
+            throw new NotImplementedException();
+        }
+
         public ParseInfo ExpressionList() {
             // TEMPORARY - DELETE THIS
             if (_curToken.TokenType == TokenType.EOF) { return new(true); }
