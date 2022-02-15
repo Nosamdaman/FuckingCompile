@@ -29,7 +29,158 @@ namespace jfc {
         }
 
         private ParseInfo Expression() {
-            throw new NotImplementedException();
+            // First we expect an arithmetic operation
+            ParseInfo status = ArithOp();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, "Expected an arithmetic operation", true);
+                return new(false);
+            }
+
+            // Then we see how many operations to chain together
+            return ExpressionPrime();
+        }
+
+        private ParseInfo ExpressionPrime() {
+            // First check if we have a logical operator
+            char symbol;
+            if (_curToken.TokenType == TokenType.AND) {
+                symbol = '&';
+            } else if (_curToken.TokenType == TokenType.OR) {
+                symbol = '|';
+            } else {
+                return new(true);
+            }
+            NextToken();
+
+            // Then we expect another arithmetic operation
+            ParseInfo status = ArithOp();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, $"Expected an arithmetic operation after \"{symbol}\"", true);
+                return new(false);
+            }
+
+            // Then we do it all over again
+            return ExpressionPrime();
+        }
+
+        private ParseInfo ArithOp() {
+            // First we expect a relation
+            ParseInfo status = Relation();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, "Expected a relation", true);
+                return new(false);
+            }
+
+            // Then we see how many relations we need to chain together
+            return ArithOpPrime();
+        }
+
+        private ParseInfo ArithOpPrime() {
+            // First check if we have an arithmatic operator
+            char symbol;
+            if (_curToken.TokenType == TokenType.PLUS) {
+                symbol = '+';
+            } else if (_curToken.TokenType == TokenType.MINUS) {
+                symbol = '-';
+            } else {
+                return new(true);
+            }
+            NextToken();
+
+            // Then we expect another relation
+            ParseInfo status = Relation();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, $"Expected a relation after \"{symbol}\"", true);
+                return new(false);
+            }
+
+            // Then we go again
+            return ArithOpPrime();
+        }
+
+        private ParseInfo Relation() {
+            // First we expect a term
+            ParseInfo status = Term();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, "Expected a term", true);
+                return new(false);
+            }
+
+            // Then we see how many terms we need to chain together
+            return RelationPrime();
+        }
+
+        private ParseInfo RelationPrime() {
+            // First check if we have a comparison operator
+            string symbol;
+            switch (_curToken.TokenType) {
+            case TokenType.EQ:
+                symbol = "==";
+                break;
+            case TokenType.NEQ:
+                symbol = "!=";
+                break;
+            case TokenType.GT:
+                symbol = ">";
+                break;
+            case TokenType.GT_EQ:
+                symbol = ">=";
+                break;
+            case TokenType.LT:
+                symbol = "<";
+                break;
+            case TokenType.LT_EQ:
+                symbol = "<=";
+                break;
+            default:
+                return new(true);
+            }
+            NextToken();
+
+            // If so, we expect another term
+            ParseInfo status = Term();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, $"Expected a term after \"{symbol}\"", true);
+                return new(false);
+            }
+
+            // Now we go again
+            return RelationPrime();
+        }
+
+        private ParseInfo Term() {
+            // First we expect a factor
+            ParseInfo status = Factor();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, "Expected a factor", true);
+                return new(false);
+            }
+
+            // Then we see how many factors we need to chain together
+            return TermPrime();
+        }
+
+        private ParseInfo TermPrime() {
+            // First check if we have a multiplication operation
+            char symbol;
+            if (_curToken.TokenType == TokenType.TIMES) {
+                symbol = '*';
+            } else if (_curToken.TokenType == TokenType.DIVIDE) {
+                symbol = '/';
+            } else {
+                return new(true);
+            }
+            NextToken();
+
+            // If so, we expect another factor
+            ParseInfo status = Factor();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, $"Expected a factor after \"{symbol}\"", true);
+                return new(false);
+            }
+
+            // Now we go again
+            return TermPrime();
         }
 
         private ParseInfo Factor() {
