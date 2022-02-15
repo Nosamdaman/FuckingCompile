@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace jfc {
     public struct ParseInfo {
@@ -54,7 +55,13 @@ namespace jfc {
 
         private ParseInfo Expression() {
             // First check for a "not"
-            if (_curToken.TokenType == TokenType.NOT_RW) { NextToken(); }
+            StringBuilder sb = new();
+            sb.Append("Parsed expression as");
+            if (_curToken.TokenType == TokenType.NOT_RW) {
+                NextToken();
+                sb.Append(" not");
+            }
+            sb.Append(" arithmetic operation");
 
             // Then we expect an arithmetic operation
             ParseInfo status = ArithOp();
@@ -64,10 +71,10 @@ namespace jfc {
             }
 
             // Then we see how many operations to chain together
-            return ExpressionPrime();
+            return ExpressionPrime(sb);
         }
 
-        private ParseInfo ExpressionPrime() {
+        private ParseInfo ExpressionPrime(StringBuilder sb) {
             // First check if we have a logical operator
             char symbol;
             if (_curToken.TokenType == TokenType.AND) {
@@ -75,12 +82,18 @@ namespace jfc {
             } else if (_curToken.TokenType == TokenType.OR) {
                 symbol = '|';
             } else {
+                _src.Report(MsgLevel.DEBUG, sb.ToString(), true);
                 return new(true);
             }
             NextToken();
+            sb.Append($" {symbol}");
 
             // Then check for a "not"
-            if (_curToken.TokenType == TokenType.NOT_RW) { NextToken(); }
+            if (_curToken.TokenType == TokenType.NOT_RW) {
+                NextToken();
+                sb.Append(" not");
+            }
+            sb.Append(" arithmetic operation");
 
             // Then we expect another arithmetic operation
             ParseInfo status = ArithOp();
@@ -90,7 +103,7 @@ namespace jfc {
             }
 
             // Then we do it all over again
-            return ExpressionPrime();
+            return ExpressionPrime(sb);
         }
 
         private ParseInfo ArithOp() {
@@ -102,10 +115,12 @@ namespace jfc {
             }
 
             // Then we see how many relations we need to chain together
-            return ArithOpPrime();
+            StringBuilder sb = new();
+            sb.Append("Parsed arithmetic operation as relation");
+            return ArithOpPrime(sb);
         }
 
-        private ParseInfo ArithOpPrime() {
+        private ParseInfo ArithOpPrime(StringBuilder sb) {
             // First check if we have an arithmatic operator
             char symbol;
             if (_curToken.TokenType == TokenType.PLUS) {
@@ -113,9 +128,11 @@ namespace jfc {
             } else if (_curToken.TokenType == TokenType.MINUS) {
                 symbol = '-';
             } else {
+                _src.Report(MsgLevel.DEBUG, sb.ToString(), true);
                 return new(true);
             }
             NextToken();
+            sb.Append($" {symbol} relation");
 
             // Then we expect another relation
             ParseInfo status = Relation();
@@ -125,7 +142,7 @@ namespace jfc {
             }
 
             // Then we go again
-            return ArithOpPrime();
+            return ArithOpPrime(sb);
         }
 
         private ParseInfo Relation() {
@@ -137,10 +154,12 @@ namespace jfc {
             }
 
             // Then we see how many terms we need to chain together
-            return RelationPrime();
+            StringBuilder sb = new();
+            sb.Append("Parsed relation as term");
+            return RelationPrime(sb);
         }
 
-        private ParseInfo RelationPrime() {
+        private ParseInfo RelationPrime(StringBuilder sb) {
             // First check if we have a comparison operator
             string symbol;
             switch (_curToken.TokenType) {
@@ -163,9 +182,11 @@ namespace jfc {
                 symbol = "<=";
                 break;
             default:
+                _src.Report(MsgLevel.DEBUG, sb.ToString(), true);
                 return new(true);
             }
             NextToken();
+            sb.Append($" {symbol} term");
 
             // If so, we expect another term
             ParseInfo status = Term();
@@ -175,7 +196,7 @@ namespace jfc {
             }
 
             // Now we go again
-            return RelationPrime();
+            return RelationPrime(sb);
         }
 
         private ParseInfo Term() {
@@ -187,10 +208,12 @@ namespace jfc {
             }
 
             // Then we see how many factors we need to chain together
-            return TermPrime();
+            StringBuilder sb = new();
+            sb.Append("Parsed term as factor");
+            return TermPrime(sb);
         }
 
-        private ParseInfo TermPrime() {
+        private ParseInfo TermPrime(StringBuilder sb) {
             // First check if we have a multiplication operation
             char symbol;
             if (_curToken.TokenType == TokenType.TIMES) {
@@ -198,9 +221,11 @@ namespace jfc {
             } else if (_curToken.TokenType == TokenType.DIVIDE) {
                 symbol = '/';
             } else {
+                _src.Report(MsgLevel.DEBUG, sb.ToString(), true);
                 return new(true);
             }
             NextToken();
+            sb.Append($" {symbol} factor");
 
             // If so, we expect another factor
             ParseInfo status = Factor();
@@ -210,7 +235,7 @@ namespace jfc {
             }
 
             // Now we go again
-            return TermPrime();
+            return TermPrime(sb);
         }
 
         private ParseInfo Factor() {
@@ -228,6 +253,7 @@ namespace jfc {
                     return new(false);
                 }
                 NextToken();
+                _src.Report(MsgLevel.DEBUG, "Parsed factor as a nested expression", true);
                 return new(true);
             }
 
@@ -260,6 +286,7 @@ namespace jfc {
                         return new(false);
                     }
                     NextToken();
+                    _src.Report(MsgLevel.DEBUG, "Parsed factor as procedure call", true);
                     return new(true);
                 }
 
@@ -276,6 +303,9 @@ namespace jfc {
                         return new(false);
                     }
                     NextToken();
+                    _src.Report(MsgLevel.DEBUG, "Parsed factor as name with indexing", true);
+                } else {
+                    _src.Report(MsgLevel.DEBUG, "Parsed factor as name", true);
                 }
 
                 // Either way, we should be good here
@@ -303,6 +333,9 @@ namespace jfc {
                             return new(false);
                         }
                         NextToken();
+                        _src.Report(MsgLevel.DEBUG, "Parsed factor as minus name with indexing", true);
+                    } else {
+                        _src.Report(MsgLevel.DEBUG, "Parsed factor as minus name", true);
                     }
 
                     // We should be good here
@@ -315,24 +348,28 @@ namespace jfc {
                     return new(false);
                 }
                 NextToken();
+                _src.Report(MsgLevel.DEBUG, "Parsed factor as minus number literal", true);
                 return new(true);
             }
 
             // We can accept numbers
             if (_curToken.TokenType == TokenType.INTEGER || _curToken.TokenType == TokenType.FLOAT) {
                 NextToken();
+                _src.Report(MsgLevel.DEBUG, "Parsed factor as number literal", true);
                 return new(true);
             }
 
             // We can accept strings
             if (_curToken.TokenType == TokenType.STRING) {
                 NextToken();
+                _src.Report(MsgLevel.DEBUG, "Parsed factor as string literal", true);
                 return new(true);
             }
 
             // We can accept boolean literals
             if (_curToken.TokenType == TokenType.TRUE_RW || _curToken.TokenType == TokenType.FALSE_RW) {
                 NextToken();
+                _src.Report(MsgLevel.DEBUG, "Parsed factor as boolean literal", true);
                 return new(true);
             }
 

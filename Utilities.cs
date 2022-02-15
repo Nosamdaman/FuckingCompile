@@ -24,10 +24,10 @@ namespace jfc {
 
     /// <summary> Reporting Levels </summary>
     public enum MsgLevel {
-        DEBUG,
-        INFO,
-        WARN,
-        ERROR
+        DEBUG = 0,
+        INFO = 1,
+        WARN = 2,
+        ERROR = 3
     }
 
     /// <summary> Class for reading from the source code file </summary>
@@ -42,6 +42,9 @@ namespace jfc {
 
         /// <summary> The current character counts </summary>
         public int CharCount { get => _charCount; }
+
+        /// <summary> The minimum message level required to be reported </summary>
+        public MsgLevel MinReportLevel { get; set; } = MsgLevel.INFO;
 
         /// <summary> Releases all managed resources </summary>
         public void Dispose() {
@@ -95,7 +98,7 @@ namespace jfc {
                 sb.Append(": ");
             }
             sb.Append(msg);
-            Console.WriteLine(sb.ToString());
+            if (lvl >= MinReportLevel) Console.WriteLine(sb.ToString());
         }
     }
 }
