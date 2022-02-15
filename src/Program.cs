@@ -7,13 +7,13 @@ namespace jfc {
         private const string _helpText =
             "Just Fucking Compile - a compiler by Mason Davy\n\n" +
             "Usage:\n" +
-            "  jfc src_file\n" +
+            "  jfc file\n" +
             "  jfc -h | --help\n" +
             "  jfc -v | --version\n\n" +
             "Options:\n" +
             "  -h --help     Show this screen\n" +
             "  -v --version  Show version information\n";
-        private const string _versionText = "v0.1.1";
+        private const string _versionText = "v0.1.2";
 
         /// <summary> Main entry-point function </summary>
         /// <param name="args"> Ordered list of all command-line arguments passed in </param>
@@ -25,7 +25,7 @@ namespace jfc {
                 Environment.ExitCode = 1;
                 return;
             } else if (args.Length > 1) {
-                Console.WriteLine("WARNING: Multiple arguments detected, only the first will be considered");
+                Console.WriteLine(" WARN: Multiple arguments detected, only the first will be considered");
             }
 
             // Handle non source-file inputs
@@ -42,7 +42,6 @@ namespace jfc {
             try {
                 src = new(args[0]);
             } catch (Exception) {
-                Console.WriteLine($"ERROR: Unable to open the file \"{args[0]}\" for reading, aborting now");
                 Environment.ExitCode = 1;
                 return;
             }

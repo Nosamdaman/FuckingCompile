@@ -48,7 +48,7 @@ namespace jfc {
 
         /// <summary> Releases all managed resources </summary>
         public void Dispose() {
-            _sr.Dispose();
+            _sr?.Dispose();
             GC.SuppressFinalize(this);
         }
 
@@ -60,8 +60,13 @@ namespace jfc {
         /// <exception cref="DirectoryNotFoundException"/>
         /// <exception cref="IOException"/>
         public SourceFileReader(string sourceFile) {
-            _sr = new(sourceFile);
-            _fName = Path.GetFileName(sourceFile);
+            try {
+                _fName = Path.GetFileName(sourceFile);
+                _sr = new(sourceFile);
+            } catch (Exception) {
+                Report(MsgLevel.ERROR, $"Unable to open file \"{sourceFile}\" for reading");
+                throw;
+            }
         }
 
         /// <summary> Reads the next character </summary>
