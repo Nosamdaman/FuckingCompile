@@ -82,7 +82,7 @@ namespace jfc {
             } else if (_curToken.TokenType == TokenType.OR) {
                 symbol = '|';
             } else {
-                _src.Report(MsgLevel.DEBUG, sb.ToString(), true);
+                _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true);
             }
             NextToken();
@@ -128,7 +128,7 @@ namespace jfc {
             } else if (_curToken.TokenType == TokenType.MINUS) {
                 symbol = '-';
             } else {
-                _src.Report(MsgLevel.DEBUG, sb.ToString(), true);
+                _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true);
             }
             NextToken();
@@ -182,7 +182,7 @@ namespace jfc {
                 symbol = "<=";
                 break;
             default:
-                _src.Report(MsgLevel.DEBUG, sb.ToString(), true);
+                _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true);
             }
             NextToken();
@@ -221,7 +221,7 @@ namespace jfc {
             } else if (_curToken.TokenType == TokenType.DIVIDE) {
                 symbol = '/';
             } else {
-                _src.Report(MsgLevel.DEBUG, sb.ToString(), true);
+                _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true);
             }
             NextToken();
@@ -253,7 +253,7 @@ namespace jfc {
                     return new(false);
                 }
                 NextToken();
-                _src.Report(MsgLevel.DEBUG, "Parsed factor as a nested expression", true);
+                _src.Report(MsgLevel.TRACE, "Parsed factor as a nested expression", true);
                 return new(true);
             }
 
@@ -286,7 +286,7 @@ namespace jfc {
                         return new(false);
                     }
                     NextToken();
-                    _src.Report(MsgLevel.DEBUG, "Parsed factor as procedure call", true);
+                    _src.Report(MsgLevel.TRACE, "Parsed factor as procedure call", true);
                     return new(true);
                 }
 
@@ -303,9 +303,9 @@ namespace jfc {
                         return new(false);
                     }
                     NextToken();
-                    _src.Report(MsgLevel.DEBUG, "Parsed factor as name with indexing", true);
+                    _src.Report(MsgLevel.TRACE, "Parsed factor as name with indexing", true);
                 } else {
-                    _src.Report(MsgLevel.DEBUG, "Parsed factor as name", true);
+                    _src.Report(MsgLevel.TRACE, "Parsed factor as name", true);
                 }
 
                 // Either way, we should be good here
@@ -333,9 +333,9 @@ namespace jfc {
                             return new(false);
                         }
                         NextToken();
-                        _src.Report(MsgLevel.DEBUG, "Parsed factor as minus name with indexing", true);
+                        _src.Report(MsgLevel.TRACE, "Parsed factor as minus name with indexing", true);
                     } else {
-                        _src.Report(MsgLevel.DEBUG, "Parsed factor as minus name", true);
+                        _src.Report(MsgLevel.TRACE, "Parsed factor as minus name", true);
                     }
 
                     // We should be good here
@@ -348,28 +348,28 @@ namespace jfc {
                     return new(false);
                 }
                 NextToken();
-                _src.Report(MsgLevel.DEBUG, "Parsed factor as minus number literal", true);
+                _src.Report(MsgLevel.TRACE, "Parsed factor as minus number literal", true);
                 return new(true);
             }
 
             // We can accept numbers
             if (_curToken.TokenType == TokenType.INTEGER || _curToken.TokenType == TokenType.FLOAT) {
                 NextToken();
-                _src.Report(MsgLevel.DEBUG, "Parsed factor as number literal", true);
+                _src.Report(MsgLevel.TRACE, "Parsed factor as number literal", true);
                 return new(true);
             }
 
             // We can accept strings
             if (_curToken.TokenType == TokenType.STRING) {
                 NextToken();
-                _src.Report(MsgLevel.DEBUG, "Parsed factor as string literal", true);
+                _src.Report(MsgLevel.TRACE, "Parsed factor as string literal", true);
                 return new(true);
             }
 
             // We can accept boolean literals
             if (_curToken.TokenType == TokenType.TRUE_RW || _curToken.TokenType == TokenType.FALSE_RW) {
                 NextToken();
-                _src.Report(MsgLevel.DEBUG, "Parsed factor as boolean literal", true);
+                _src.Report(MsgLevel.TRACE, "Parsed factor as boolean literal", true);
                 return new(true);
             }
 

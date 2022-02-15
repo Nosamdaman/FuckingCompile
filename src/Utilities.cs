@@ -24,10 +24,11 @@ namespace jfc {
 
     /// <summary> Reporting Levels </summary>
     public enum MsgLevel {
-        DEBUG = 0,
-        INFO = 1,
-        WARN = 2,
-        ERROR = 3
+        TRACE = 0,
+        DEBUG = 1,
+        INFO = 2,
+        WARN = 3,
+        ERROR = 4
     }
 
     /// <summary> Class for reading from the source code file </summary>
@@ -91,6 +92,7 @@ namespace jfc {
         public void Report(MsgLevel lvl, string msg, bool showFileInfo = false) {
             StringBuilder sb = new();
             sb.Append(lvl switch {
+                MsgLevel.TRACE => "TRACE",
                 MsgLevel.DEBUG => "DEBUG",
                 MsgLevel.INFO => " INFO",
                 MsgLevel.WARN => " WARN",
