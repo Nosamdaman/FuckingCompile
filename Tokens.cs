@@ -45,10 +45,7 @@ namespace jfc {
         FLOAT,
         STRING,
         IDENTIFIER,
-        EOF,
-        TREE,
-        ERROR,
-        ERRORTREE
+        EOF
     }
 
     /// <summary> Represents a token in the program </summary>

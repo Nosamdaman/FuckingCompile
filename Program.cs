@@ -48,12 +48,16 @@ namespace jfc {
             }
 
             // Test code, we'll dump everything the scanner sees here
-            Scanner scanner = new(src);
-            Token curToken = scanner.Scan();
-            while (curToken.TokenType != TokenType.EOF) {
-                Console.WriteLine($"Line Count: {src.LineCount,3}   | Token Type: {curToken.TokenType,-15}| Token Mark: {curToken.TokenMark}");
-                curToken = scanner.Scan();
-            }
+            // Scanner scanner = new(src);
+            // Token curToken = scanner.Scan();
+            // while (curToken.TokenType != TokenType.EOF) {
+            //     Console.WriteLine($"Line Count: {src.LineCount,3}   | Token Type: {curToken.TokenType,-15}| Token Mark: {curToken.TokenMark}");
+            //     curToken = scanner.Scan();
+            // }
+
+            // Test code, we'll run the parser
+            Parser parser = new(src);
+            parser.ExpressionList();
 
             // Close the file
             src.Dispose();

@@ -21,6 +21,7 @@ namespace jfc {
         public Parser(SourceFileReader src) {
             _src = src;
             _scanner = new Scanner(src);
+            NextToken();
         }
 
         private Token NextToken() {
@@ -28,8 +29,34 @@ namespace jfc {
             return _curToken;
         }
 
+        public ParseInfo ExpressionList() {
+            // TEMPORARY - DELETE THIS
+            if (_curToken.TokenType == TokenType.EOF) { return new(true); }
+            // END DELETE THIS
+
+            // First we expect an expression
+            ParseInfo status = Expression();
+            if (!status.Success) {
+                _src.Report(MsgLevel.ERROR, "Expected an expression", true);
+                return new(false);
+            }
+
+            // Then we expect a semi-colon
+            if (_curToken.TokenType != TokenType.SEMICOLON) {
+                _src.Report(MsgLevel.ERROR, "Expected a \";\" after an expression", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we do it all again
+            return ExpressionList();
+        }
+
         private ParseInfo Expression() {
-            // First we expect an arithmetic operation
+            // First check for a "not"
+            if (_curToken.TokenType == TokenType.NOT_RW) { NextToken(); }
+
+            // Then we expect an arithmetic operation
             ParseInfo status = ArithOp();
             if (!status.Success) {
                 _src.Report(MsgLevel.ERROR, "Expected an arithmetic operation", true);
@@ -51,6 +78,9 @@ namespace jfc {
                 return new(true);
             }
             NextToken();
+
+            // Then check for a "not"
+            if (_curToken.TokenType == TokenType.NOT_RW) { NextToken(); }
 
             // Then we expect another arithmetic operation
             ParseInfo status = ArithOp();
