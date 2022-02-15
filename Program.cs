@@ -38,9 +38,9 @@ namespace jfc {
             }
 
             // Try to open the indicated file
-            FileStream fs;
+            SourceFileReader src;
             try {
-                fs = File.OpenRead(args[0]);
+                src = new(args[0]);
             } catch (Exception) {
                 Console.WriteLine($"ERROR: Unable to open the file \"{args[0]}\" for reading, aborting now");
                 Environment.ExitCode = 1;
@@ -48,16 +48,15 @@ namespace jfc {
             }
 
             // Test code, we'll dump everything the scanner sees here
-            using (Scanner scanner = new(fs)) {
-                Token curToken = scanner.Scan();
-                while (curToken.TokenType != TokenType.EOF) {
-                    Console.WriteLine($"Line Count: {scanner.LineCount,3}   | Token Type: {curToken.TokenType,-15}| Token Mark: {curToken.TokenMark}");
-                    curToken = scanner.Scan();
-                }
+            Scanner scanner = new(src);
+            Token curToken = scanner.Scan();
+            while (curToken.TokenType != TokenType.EOF) {
+                Console.WriteLine($"Line Count: {src.LineCount,3}   | Token Type: {curToken.TokenType,-15}| Token Mark: {curToken.TokenMark}");
+                curToken = scanner.Scan();
             }
 
             // Close the file
-            fs.Close();
+            src.Dispose();
         }
     }
 }

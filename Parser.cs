@@ -12,21 +12,15 @@ namespace jfc {
     }
 
     /// <summary> Parses the program </summary>
-    public class Parser : IDisposable {
+    public class Parser {
         private readonly Scanner _scanner;
         private Token _curToken = null;
 
-        /// <summary> Releases all managed resources </summary>
-        public void Dispose() {
-            _scanner.Dispose();
-            GC.SuppressFinalize(this);
-        }
-
         /// <summary> Creates a new parser on the given file </summary>
-        /// <param name="fs"> The file stream containing the source code </param>
+        /// <param name="src"> The  source code </param>
         /// <exception cref="ArgumentNullException"/>
-        public Parser(FileStream fs) {
-            _scanner = new Scanner(fs);
+        public Parser(SourceFileReader src) {
+            _scanner = new Scanner(src);
         }
 
         private Token NextToken() {
