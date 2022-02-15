@@ -55,7 +55,7 @@ namespace jfc {
                 NextToken();
                 status = Expression();
                 if (!status.Success) {
-                    _src.Report(MsgLevel.ERROR, "Expression expected after \"[\"", true);
+                    _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
                     return new(false);
                 }
                 if (_curToken.TokenType != TokenType.R_BRACKET) {
@@ -78,7 +78,7 @@ namespace jfc {
             // Finally we need an expression
             status = Expression();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, "Expected an expression after \":=\"", true);
+                _src.Report(MsgLevel.DEBUG, "Expected an expression after \":=\"", true);
                 return new(false);
             }
 
@@ -102,7 +102,7 @@ namespace jfc {
             NextToken();
             ParseInfo status = Expression();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, "Expected an expression after \"(\"", true);
+                _src.Report(MsgLevel.DEBUG, "Expected an expression after \"(\"", true);
                 return new(false);
             }
             NextToken();
@@ -133,7 +133,7 @@ namespace jfc {
             // First we expect an expression
             ParseInfo status = Expression();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, "Expected an expression", true);
+                _src.Report(MsgLevel.DEBUG, "Expected an expression", true);
                 return new(false);
             }
 
@@ -161,7 +161,7 @@ namespace jfc {
             // Then we expect an arithmetic operation
             ParseInfo status = ArithOp();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, "Expected an arithmetic operation", true);
+                _src.Report(MsgLevel.DEBUG, "Expected an arithmetic operation", true);
                 return new(false);
             }
 
@@ -193,7 +193,7 @@ namespace jfc {
             // Then we expect another arithmetic operation
             ParseInfo status = ArithOp();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, $"Expected an arithmetic operation after \"{symbol}\"", true);
+                _src.Report(MsgLevel.DEBUG, $"Expected an arithmetic operation after \"{symbol}\"", true);
                 return new(false);
             }
 
@@ -205,7 +205,7 @@ namespace jfc {
             // First we expect a relation
             ParseInfo status = Relation();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, "Expected a relation", true);
+                _src.Report(MsgLevel.DEBUG, "Expected a relation", true);
                 return new(false);
             }
 
@@ -232,7 +232,7 @@ namespace jfc {
             // Then we expect another relation
             ParseInfo status = Relation();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, $"Expected a relation after \"{symbol}\"", true);
+                _src.Report(MsgLevel.DEBUG, $"Expected a relation after \"{symbol}\"", true);
                 return new(false);
             }
 
@@ -244,7 +244,7 @@ namespace jfc {
             // First we expect a term
             ParseInfo status = Term();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, "Expected a term", true);
+                _src.Report(MsgLevel.DEBUG, "Expected a term", true);
                 return new(false);
             }
 
@@ -286,7 +286,7 @@ namespace jfc {
             // If so, we expect another term
             ParseInfo status = Term();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, $"Expected a term after \"{symbol}\"", true);
+                _src.Report(MsgLevel.DEBUG, $"Expected a term after \"{symbol}\"", true);
                 return new(false);
             }
 
@@ -298,7 +298,7 @@ namespace jfc {
             // First we expect a factor
             ParseInfo status = Factor();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, "Expected a factor", true);
+                _src.Report(MsgLevel.DEBUG, "Expected a factor", true);
                 return new(false);
             }
 
@@ -325,7 +325,7 @@ namespace jfc {
             // If so, we expect another factor
             ParseInfo status = Factor();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, $"Expected a factor after \"{symbol}\"", true);
+                _src.Report(MsgLevel.DEBUG, $"Expected a factor after \"{symbol}\"", true);
                 return new(false);
             }
 
@@ -340,7 +340,7 @@ namespace jfc {
                 NextToken();
                 ParseInfo status = Expression();
                 if (!status.Success) {
-                    _src.Report(MsgLevel.ERROR, "Expression expected after \"(\"", true);
+                    _src.Report(MsgLevel.DEBUG, "Expression expected after \"(\"", true);
                     return new(false);
                 }
                 if (_curToken.TokenType != TokenType.R_PAREN) {
@@ -371,7 +371,7 @@ namespace jfc {
                     // Or it could have arguments
                     ParseInfo status = ArgumentList();
                     if (!status.Success) {
-                        _src.Report(MsgLevel.ERROR, "Argument list expected after \"(\"", true);
+                        _src.Report(MsgLevel.DEBUG, "Argument list expected after \"(\"", true);
                         return new(false);
                     }
 
@@ -390,7 +390,7 @@ namespace jfc {
                     NextToken();
                     ParseInfo status = Expression();
                     if (!status.Success) {
-                        _src.Report(MsgLevel.ERROR, "Expression expected after \"[\"", true);
+                        _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
                         return new(false);
                     }
                     if (_curToken.TokenType != TokenType.R_BRACKET) {
@@ -420,7 +420,7 @@ namespace jfc {
                         NextToken();
                         ParseInfo status = Expression();
                         if (!status.Success) {
-                            _src.Report(MsgLevel.ERROR, "Expression expected after \"[\"", true);
+                            _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
                             return new(false);
                         }
                         if (_curToken.TokenType != TokenType.R_BRACKET) {
@@ -469,6 +469,7 @@ namespace jfc {
             }
 
             // Anything else is unacceptable
+            _src.Report(MsgLevel.ERROR, "Expected a factor", true);
             return new(false);
         }
 
@@ -476,7 +477,7 @@ namespace jfc {
             // We should have an expression first
             ParseInfo status = Expression();
             if (!status.Success) {
-                _src.Report(MsgLevel.ERROR, "Expression expected in argument list", true);
+                _src.Report(MsgLevel.DEBUG, "Expression expected in argument list", true);
                 return new(false);
             }
 
