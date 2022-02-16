@@ -14,7 +14,7 @@ namespace jfc {
             "  -o --output OUTPUT    Set the output file for a successful compilation.\n" + 
             "                        Defaults to \"a.out\".\n" +
             "  -V --verbosity LEVEL  Sets the verbosity level. Can be one of \"0\", \"1\", or\n" +
-            "                        \"2\". Defaults to \"2\".\n" +
+            "                        \"2\". Defaults to \"0\".\n" +
             "  -h --help             Show this screen\n" +
             "  -v --version          Show version information\n";
         private const string _versionText = "v0.1.3";
