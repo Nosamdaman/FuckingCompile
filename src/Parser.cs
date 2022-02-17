@@ -168,6 +168,7 @@ namespace jfc {
             NextToken();
             if (_curToken.TokenType != TokenType.IF_RW) {
                 _src.Report(MsgLevel.ERROR, "Expected \"IF\" after \"END\"", true);
+                return new(false);
             }
             NextToken();
 
@@ -177,7 +178,61 @@ namespace jfc {
         }
 
         private ParseInfo LoopStatement() {
-            throw new NotImplementedException();
+            // First we expect the "for" keyword
+            if (_curToken.TokenType != TokenType.FOR_RW) {
+                _src.Report(MsgLevel.ERROR, "Expected \"FOR\" at the start of a loop", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Next we look for the loop initialization
+            if (_curToken.TokenType != TokenType.L_PAREN) {
+                _src.Report(MsgLevel.ERROR, "Expected \"(\" after \"FOR\"", true);
+                return new(false);
+            }
+            NextToken();
+            ParseInfo status = AssignmentStatement();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expected an assignment statement aftet \"(\"", true);
+                return new(false);
+            }
+            if (_curToken.TokenType != TokenType.SEMICOLON) {
+                _src.Report(MsgLevel.ERROR, "Expected \";\" after the assignment statement", true);
+                return new(false);
+            }
+            NextToken();
+            status = Expression();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expected an expression after \";\"", true);
+                return new(false);
+            }
+            if (_curToken.TokenType != TokenType.R_PAREN) {
+                _src.Report(MsgLevel.ERROR, "Expected \")\" after expression", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Now we accept statements until the end
+            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expected a statement list after \")\"", true);
+                return new(false);
+            }
+
+            // Now we expect the final two keywords
+            if (_curToken.TokenType != TokenType.END_RW) {
+                _src.Report(MsgLevel.ERROR, "Expected \"END\" after statement list", true);
+                return new(false);
+            }
+            NextToken();
+            if (_curToken.TokenType != TokenType.FOR_RW) {
+                _src.Report(MsgLevel.ERROR, "Expected \"FOR\" after \"END\"", true);
+                return new(false);
+            }
+
+            // We should be good to go
+            _src.Report(MsgLevel.DEBUG, "Parsed loop statement", true);
+            return new(true);
         }
 
         private ParseInfo ReturnStatement() {
