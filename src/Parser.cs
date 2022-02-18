@@ -236,7 +236,23 @@ namespace jfc {
         }
 
         private ParseInfo ReturnStatement() {
-            throw new NotImplementedException();
+            // First we expect the return keyword
+            if (_curToken.TokenType != TokenType.RETURN_RW) {
+                _src.Report(MsgLevel.ERROR, "Expected \"RETURN\"", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Finally we expect an expression
+            ParseInfo status = Expression();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expected expression after \"RETURN\"", true);
+                return new(false);
+            }
+
+            // We should be good to go
+            _src.Report(MsgLevel.DEBUG, "Parsed return statement", true);
+            return new(true);
         }
 
         public ParseInfo ExpressionList() {
