@@ -31,6 +31,84 @@ namespace jfc {
             return _curToken;
         }
 
+        private ParseInfo Declaration() {
+            throw new NotImplementedException();
+        }
+
+        private ParseInfo VariableDeclaration() {
+            // First we expect the variable keyword
+            if (_curToken.TokenType != TokenType.VARIABLE_RW) {
+                _src.Report(MsgLevel.ERROR, "\"VARIABLE\" expected at the start of a declaration", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we expect an identifier
+            if (_curToken.TokenType != TokenType.IDENTIFIER) {
+                _src.Report(MsgLevel.ERROR, "Identifier expected after \"VARIABLE\"", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we expect a colon
+            if (_curToken.TokenType != TokenType.COLON) {
+                _src.Report(MsgLevel.ERROR, "\":\" expected after identifier", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we expect a type mark
+            ParseInfo status = TypeMark();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Type mark expected after \":\"", true);
+                return new(false);
+            }
+
+            // If we don't see a left bracket, then we're good to go
+            if (_curToken.TokenType != TokenType.L_BRACKET) {
+                _src.Report(MsgLevel.DEBUG, "Parsed variable declaration", true);
+                return new(true);
+            }
+            NextToken();
+
+            // Otherwise, we're looking for a number next
+            if (_curToken.TokenType != TokenType.FLOAT || _curToken.TokenType != TokenType.INTEGER) {
+                _src.Report(MsgLevel.ERROR, "Bound expected after \"[\"", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Finally we're looking for a right bracket
+            if (_curToken.TokenType != TokenType.R_BRACKET) {
+                _src.Report(MsgLevel.ERROR, "\"]\" expected after bound", true);
+                return new(false);
+            }
+
+            // We should be good to go
+            return new(true);
+        }
+
+        private ParseInfo TypeMark() {
+            // Check for a valid token
+            if (_curToken.TokenType == TokenType.INTEGER_RW) {
+                NextToken();
+                return new(true);
+            } else if (_curToken.TokenType == TokenType.FLOAT_RW) {
+                NextToken();
+                return new(true);
+            } else if (_curToken.TokenType == TokenType.STRING_RW) {
+                NextToken();
+                return new(true);
+            } else if (_curToken.TokenType == TokenType.BOOL_RW) {
+                NextToken();
+                return new(true);
+            }
+
+            // Otherwise error
+            _src.Report(MsgLevel.ERROR, "Type Mark must be \"INTEGER\", \"FLOAT\", \"STRING\", or \"BOOL\"", true);
+            return new(false);
+        }
+
         private ParseInfo StatementList(TokenType[] exitTokens) {
             // Loop to look for statements
             while (!exitTokens.Contains(_curToken.TokenType)) {
