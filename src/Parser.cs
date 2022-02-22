@@ -35,6 +35,34 @@ namespace jfc {
             throw new NotImplementedException();
         }
 
+        private ParseInfo ProcedureDeclaration() {
+            // First we expect a procedure header
+            ParseInfo status = ProcedureHeader();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Procedure header expected at the start of a procedure declaration", true);
+                return new(false);
+            }
+
+            // Then we expect a procedure body
+            status = ProcedureBody();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Procedure header expected after procedure header", true);
+                return new(false);
+            }
+
+            // We should be good to go
+            _src.Report(MsgLevel.DEBUG, "Parsed procedure declaration", true);
+            return new(true);
+        }
+
+        private ParseInfo ProcedureHeader() {
+            throw new NotImplementedException();
+        }
+
+        private ParseInfo ProcedureBody() {
+            throw new NotImplementedException();
+        }
+
         private ParseInfo VariableDeclaration() {
             // First we expect the variable keyword
             if (_curToken.TokenType != TokenType.VARIABLE_RW) {
@@ -85,6 +113,7 @@ namespace jfc {
             }
 
             // We should be good to go
+            _src.Report(MsgLevel.DEBUG, "Parsed variable declaration", true);
             return new(true);
         }
 
