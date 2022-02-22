@@ -127,7 +127,7 @@ namespace jfc {
             Console.WriteLine("Just Fucking Compile " + _versionText);
             Console.WriteLine($"| Source File: \"{sourceFile}\"");
             Console.WriteLine($"| Output File: \"{outputFile}\"");
-            Console.WriteLine($"|   Verbosity: {verbosity}");
+            Console.WriteLine($"|   Verbosity: {verbosity}\n");
 
             // Try to open the indicated file
             SourceFileReader src;

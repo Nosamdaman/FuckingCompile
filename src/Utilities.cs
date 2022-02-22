@@ -90,6 +90,7 @@ namespace jfc {
         /// <param name="msg"> The message to be printed </param>
         /// <param name="showFileInfo"> Whether or not to show the current file information </param>
         public void Report(MsgLevel lvl, string msg, bool showFileInfo = false) {
+            // Build the left side of the message
             StringBuilder sb = new();
             sb.Append(lvl switch {
                 MsgLevel.TRACE => "TRACE",
@@ -99,12 +100,19 @@ namespace jfc {
                 MsgLevel.ERROR => "ERROR",
                 _ => throw new ArgumentException("Invalid enum", nameof(lvl))
             });
-            if (showFileInfo) {
-                sb.Append($" ({_fName}:{_lineCount}:{_charCount}): ");
-            } else {
-                sb.Append(": ");
-            }
+            sb.Append(": ");
             sb.Append(msg);
+
+            // Build the right side of the message, if desired
+            if (showFileInfo) {
+                sb.Append("  ");
+                string fileInfo = $"({_fName}:{_lineCount}:{_charCount})";
+                int padding = Console.BufferWidth - (sb.Length + fileInfo.Length);
+                while (padding > 0) { sb.Append(' '); padding--; }
+                sb.Append(fileInfo);
+            }
+
+            // Report the message
             if (lvl >= MinReportLevel) Console.WriteLine(sb.ToString());
         }
     }
