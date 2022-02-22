@@ -56,10 +56,67 @@ namespace jfc {
         }
 
         private ParseInfo ProcedureHeader() {
-            throw new NotImplementedException();
+            // First we expect the procedure keyword
+            if (_curToken.TokenType != TokenType.PROCEDURE_RW) {
+                _src.Report(MsgLevel.ERROR, "\"PROCEDURE\" expected at the start of a declaration", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we expect an identifier
+            if (_curToken.TokenType != TokenType.IDENTIFIER) {
+                _src.Report(MsgLevel.ERROR, "Identifier expected after \"PROCEDURE\"", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we expect a colon
+            if (_curToken.TokenType != TokenType.COLON) {
+                _src.Report(MsgLevel.ERROR, "\":\" expected after identifier", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we expect a type mark
+            ParseInfo status = TypeMark();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Type mark expected after \":\"", true);
+                return new(false);
+            }
+
+            // Then we need a left parens
+            if (_curToken.TokenType != TokenType.L_PAREN) {
+                _src.Report(MsgLevel.ERROR, "\"(\" expected after type mark", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we need the parameter list
+            if (_curToken.TokenType != TokenType.R_PAREN) {
+                status = ParameterList();
+                if (!status.Success) {
+                    _src.Report(MsgLevel.DEBUG, "Parameter list expected after \"(\"", true);
+                    return new(false);
+                }
+            }
+
+            // And finally we need a right parens
+            if (_curToken.TokenType != TokenType.R_PAREN) {
+                _src.Report(MsgLevel.ERROR, "\")\" expected after parameter list", true);
+                return new(false);
+            }
+            NextToken();
+
+            // We should be good to go
+            _src.Report(MsgLevel.DEBUG, "Parsed procedure header", true);
+            return new(true);
         }
 
         private ParseInfo ProcedureBody() {
+            throw new NotImplementedException();
+        }
+
+        private ParseInfo ParameterList() {
             throw new NotImplementedException();
         }
 
