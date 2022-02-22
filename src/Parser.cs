@@ -174,6 +174,23 @@ namespace jfc {
             return new(true);
         }
 
+        private ParseInfo DeclarationList(TokenType[] exitTokens) {
+            // Loop to look for declarations
+            while (!exitTokens.Contains(_curToken.TokenType)) {
+                ParseInfo status = Declaration();
+                if (!status.Success) {
+                    _src.Report(MsgLevel.DEBUG, "Expected a declaration", true);
+                    return new(false);
+                }
+                if (_curToken.TokenType != TokenType.SEMICOLON) {
+                    _src.Report(MsgLevel.ERROR, "\";\" expected after declaration", true);
+                    return new(false);
+                }
+                NextToken();
+            }
+            return new(true);
+        }
+
         private ParseInfo TypeMark() {
             // Check for a valid token
             if (_curToken.TokenType == TokenType.INTEGER_RW) {
