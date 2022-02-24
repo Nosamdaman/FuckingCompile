@@ -84,11 +84,37 @@ namespace jfc {
         }
 
         private ParseInfo ProcedureBody() {
-            throw new NotImplementedException();
+            // First we expect a declaration list
+            ParseInfo status = DeclarationList(new[] { TokenType.BEGIN_RW, TokenType.EOF });
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expected declaration list at the start of procedure body", true);
+                return new(false);
+            }
         }
 
         private ParseInfo ParameterList() {
-            throw new NotImplementedException();
+            // First we expect a parameter
+            ParseInfo status = VariableDeclaration();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Variable declaration expected at the start of a parameter list", true);
+                return new(false);
+            }
+            int count = 1;
+
+            // Then we loop until we don't see a comma
+            while (_curToken.TokenType == TokenType.COMMA) {
+                NextToken();
+                status = VariableDeclaration();
+                if (!status.Success) {
+                    _src.Report(MsgLevel.DEBUG, "Variable declaration expected after \",\"", true);
+                    return new(false);
+                }
+                count++;
+            }
+
+            // We should be good to go
+            _src.Report(MsgLevel.TRACE, $"Parsed list of {count} parameter(s)", true);
+            return new(true);
         }
 
         private ParseInfo VariableDeclaration() {
