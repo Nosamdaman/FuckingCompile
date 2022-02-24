@@ -148,29 +148,6 @@ namespace jfc {
             return new(true);
         }
 
-        public ParseInfo ExpressionList() {
-            // TEMPORARY - DELETE THIS
-            if (_curToken.TokenType == TokenType.EOF) { return new(true); }
-            // END DELETE THIS
-
-            // First we expect an expression
-            ParseInfo status = Expression();
-            if (!status.Success) {
-                _src.Report(MsgLevel.DEBUG, "Expected an expression", true);
-                return new(false);
-            }
-
-            // Then we expect a semi-colon
-            if (_curToken.TokenType != TokenType.SEMICOLON) {
-                _src.Report(MsgLevel.ERROR, "Expected a \";\" after an expression", true);
-                return new(false);
-            }
-            NextToken();
-
-            // Then we do it all again
-            return ExpressionList();
-        }
-
         private ParseInfo ArgumentList() {
             // We should have an expression first
             ParseInfo status = Expression();

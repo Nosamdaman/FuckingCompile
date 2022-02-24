@@ -176,7 +176,7 @@ namespace jfc {
             NextToken();
 
             // Otherwise, we're looking for a number next
-            if (_curToken.TokenType != TokenType.FLOAT || _curToken.TokenType != TokenType.INTEGER) {
+            if (_curToken.TokenType != TokenType.FLOAT && _curToken.TokenType != TokenType.INTEGER) {
                 _src.Report(MsgLevel.ERROR, "Bound expected after \"[\"", true);
                 return new(false);
             }
@@ -187,6 +187,7 @@ namespace jfc {
                 _src.Report(MsgLevel.ERROR, "\"]\" expected after bound", true);
                 return new(false);
             }
+            NextToken();
 
             // We should be good to go
             _src.Report(MsgLevel.DEBUG, "Parsed variable declaration", true);

@@ -17,7 +17,7 @@ namespace jfc {
             "                        \"2\". Defaults to \"0\".\n" +
             "  -h --help             Show this screen\n" +
             "  -v --version          Show version information\n";
-        private const string _versionText = "v0.1.3";
+        private const string _versionText = "v0.2.0";
 
         /// <summary> Main entry-point function </summary>
         /// <param name="args"> Ordered list of all command-line arguments passed in </param>
@@ -141,7 +141,7 @@ namespace jfc {
 
             // Test code, we'll run the parser
             Parser parser = new(src);
-            parser.ExpressionList();
+            parser.Program();
 
             // Close the file
             src.Dispose();

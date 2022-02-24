@@ -81,7 +81,6 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Expected an expression after \"(\"", true);
                 return new(false);
             }
-            NextToken();
             if (_curToken.TokenType != TokenType.R_PAREN) {
                 _src.Report(MsgLevel.ERROR, "Expected \")\" after expression", true);
                 return new(false);
@@ -105,6 +104,7 @@ namespace jfc {
             // We might have an else block
             if (_curToken.TokenType == TokenType.ELSE_RW) {
                 // Next we'll read statements until we reach the end
+                NextToken();
                 status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
                 if (!status.Success) {
                     _src.Report(MsgLevel.DEBUG, "Expected statement list after \"ELSE\"", true);
@@ -181,6 +181,7 @@ namespace jfc {
                 _src.Report(MsgLevel.ERROR, "Expected \"FOR\" after \"END\"", true);
                 return new(false);
             }
+            NextToken();
 
             // We should be good to go
             _src.Report(MsgLevel.DEBUG, "Parsed loop statement", true);

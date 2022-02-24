@@ -292,7 +292,7 @@ namespace jfc {
                 }
 
                 // Otherwise, it should be a number
-                if (_curToken.TokenType != TokenType.INTEGER || _curToken.TokenType != TokenType.FLOAT) {
+                if (_curToken.TokenType != TokenType.INTEGER && _curToken.TokenType != TokenType.FLOAT) {
                     _src.Report(MsgLevel.ERROR, "Name or number expected after \"-\"", true);
                     return new(false);
                 }
