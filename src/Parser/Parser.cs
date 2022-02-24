@@ -25,6 +25,65 @@ namespace jfc {
             NextToken();
         }
 
+        public ParseInfo Program() {
+            // First we need the program header
+            if (_curToken.TokenType != TokenType.PROGRAM_RW) {
+                _src.Report(MsgLevel.ERROR, "\"PROGRAM\" expected at the start of the program", true);
+                return new(false);
+            }
+            NextToken();
+            if (_curToken.TokenType != TokenType.IDENTIFIER) {
+                _src.Report(MsgLevel.ERROR, "Identifier expected after \"PROGRAM\"", true);
+                return new(false);
+            }
+            NextToken();
+            if (_curToken.TokenType != TokenType.IS_RW) {
+                _src.Report(MsgLevel.ERROR, "\"IS\" expected after identifier", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we need the program body
+            ParseInfo status = DeclarationList(new[] { TokenType.BEGIN_RW, TokenType.EOF });
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expected declaration list at the start of program body", true);
+                return new(false);
+            }
+            if (_curToken.TokenType != TokenType.BEGIN_RW) {
+                _src.Report(MsgLevel.ERROR, "\"BEGIN\" expected after declaration list", true);
+                return new(false);
+            }
+            NextToken();
+            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Statement list expected after \"BEGIN\"", true);
+                return new(false);
+            }
+            if (_curToken.TokenType != TokenType.END_RW) {
+                _src.Report(MsgLevel.ERROR, "\"END\" expected after statement list", true);
+                return new(false);
+            }
+            NextToken();
+            if (_curToken.TokenType != TokenType.PROGRAM_RW) {
+                _src.Report(MsgLevel.ERROR, "\"PROGRAM\" expected after \"END\"", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Finally we end with a period
+            if (_curToken.TokenType != TokenType.PERIOD) {
+                _src.Report(MsgLevel.ERROR, "\".\" expected after \"PROGRAM\"", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Now we should be at the end of the file
+            if (_curToken.TokenType != TokenType.EOF) {
+                _src.Report(MsgLevel.WARN, "Skipping anything past here", true);
+            }
+            return new(true);
+        }
+
         private Token NextToken() {
             _curToken = _scanner.Scan();
             return _curToken;
@@ -44,6 +103,31 @@ namespace jfc {
                 }
                 NextToken();
             }
+            return new(true);
+        }
+
+        private ParseInfo ParameterList() {
+            // First we expect a parameter
+            ParseInfo status = VariableDeclaration();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Variable declaration expected at the start of a parameter list", true);
+                return new(false);
+            }
+            int count = 1;
+
+            // Then we loop until we don't see a comma
+            while (_curToken.TokenType == TokenType.COMMA) {
+                NextToken();
+                status = VariableDeclaration();
+                if (!status.Success) {
+                    _src.Report(MsgLevel.DEBUG, "Variable declaration expected after \",\"", true);
+                    return new(false);
+                }
+                count++;
+            }
+
+            // We should be good to go
+            _src.Report(MsgLevel.TRACE, $"Parsed list of {count} parameter(s)", true);
             return new(true);
         }
 
