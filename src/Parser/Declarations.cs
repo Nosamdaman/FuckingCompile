@@ -3,7 +3,24 @@ using System;
 namespace jfc {
     public partial class Parser {
         private ParseInfo Declaration() {
-            throw new NotImplementedException();
+            // What we do will depend on the first token
+            ParseInfo status;
+            if (_curToken.TokenType == TokenType.GLOBAL_RW) { NextToken(); }
+            if (_curToken.TokenType == TokenType.VARIABLE_RW) {
+                status = VariableDeclaration();
+            } else if (_curToken.TokenType == TokenType.PROCEDURE_RW) {
+                status = ProcedureDeclaration();
+            } else {
+                _src.Report(MsgLevel.ERROR, "\"VARIABLE\" or \"PROCEDURE\" expectin before a declaration", true);
+                return new(false);
+            }
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Unable to parse declaration", true);
+                return new(false);
+            }
+
+            // We should be good to go
+            return new(true);
         }
 
         private ParseInfo ProcedureDeclaration() {
@@ -90,6 +107,36 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Expected declaration list at the start of procedure body", true);
                 return new(false);
             }
+
+            // Then we look for begin
+            if (_curToken.TokenType != TokenType.BEGIN_RW) {
+                _src.Report(MsgLevel.ERROR, "\"BEGIN\" expected after declaration list", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Then we need a statement list
+            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Statement list expected after \"BEGIN\"", true);
+                return new(false);
+            }
+
+            // Then we need end procedure
+            if (_curToken.TokenType != TokenType.END_RW) {
+                _src.Report(MsgLevel.ERROR, "\"END\" expected after statement list", true);
+                return new(false);
+            }
+            NextToken();
+            if (_curToken.TokenType != TokenType.PROCEDURE_RW) {
+                _src.Report(MsgLevel.ERROR, "\"PROCEDURE\" expected after \"END\"", true);
+                return new(false);
+            }
+            NextToken();
+
+            // We should be good to go
+            _src.Report(MsgLevel.DEBUG, "Parsed procedure body", true);
+            return new(true);
         }
 
         private ParseInfo ParameterList() {
