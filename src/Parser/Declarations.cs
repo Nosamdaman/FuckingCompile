@@ -1,13 +1,16 @@
-using System;
+using System.Collections.Generic;
 
 namespace jfc {
     public partial class Parser {
-        private ParseInfo Declaration() {
+        private ParseInfo Declaration(bool isGlobal = false) {
             // What we do will depend on the first token
             ParseInfo status;
-            if (_curToken.TokenType == TokenType.GLOBAL_RW) { NextToken(); }
+            if (_curToken.TokenType == TokenType.GLOBAL_RW) {
+                isGlobal = true;
+                NextToken();
+            }
             if (_curToken.TokenType == TokenType.VARIABLE_RW) {
-                status = VariableDeclaration();
+                status = VariableDeclaration(isGlobal);
             } else if (_curToken.TokenType == TokenType.PROCEDURE_RW) {
                 status = ProcedureDeclaration();
             } else {
@@ -139,7 +142,7 @@ namespace jfc {
             return new(true);
         }
 
-        private ParseInfo VariableDeclaration() {
+        private ParseInfo VariableDeclaration(bool isGlobal) {
             // First we expect the variable keyword
             if (_curToken.TokenType != TokenType.VARIABLE_RW) {
                 _src.Report(MsgLevel.ERROR, "\"VARIABLE\" expected at the start of a declaration", true);
@@ -150,6 +153,14 @@ namespace jfc {
             // Then we expect an identifier
             if (_curToken.TokenType != TokenType.IDENTIFIER) {
                 _src.Report(MsgLevel.ERROR, "Identifier expected after \"VARIABLE\"", true);
+                return new(false);
+            }
+
+            // The identifier must be unique
+            string id = (string) _curToken.TokenMark;
+            if ((!isGlobal && _local.Peek().ContainsKey(id)) || _global.ContainsKey(id)) {
+                string scope = isGlobal ? "global" : "local";
+                _src.Report(MsgLevel.ERROR, $"Identifier \"{id}\" already exists in the {scope} scope.", true);
                 return new(false);
             }
             NextToken();
@@ -167,19 +178,28 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Type mark expected after \":\"", true);
                 return new(false);
             }
+            DataType dataType = (DataType) status.Data;
 
             // If we don't see a left bracket, then we're good to go
+            Symbol variable;
             if (_curToken.TokenType != TokenType.L_BRACKET) {
-                _src.Report(MsgLevel.DEBUG, "Parsed variable declaration", true);
+                variable = Symbol.Variable(id, dataType);
+                if (isGlobal) {
+                    _global.Add(variable.Name, variable);
+                } else {
+                    _local.Peek().Add(variable.Name, variable);
+                }
+                _src.Report(MsgLevel.DEBUG, $"Variable \"{variable.Name}\" declared as \"{dataType}\"", true);
                 return new(true);
             }
             NextToken();
 
-            // Otherwise, we're looking for a number next
-            if (_curToken.TokenType != TokenType.FLOAT && _curToken.TokenType != TokenType.INTEGER) {
+            // Otherwise, we're looking for an integer next
+            if (_curToken.TokenType != TokenType.INTEGER) {
                 _src.Report(MsgLevel.ERROR, "Bound expected after \"[\"", true);
                 return new(false);
             }
+            int arraySize = (int) _curToken.TokenMark;
             NextToken();
 
             // Finally we're looking for a right bracket
@@ -190,7 +210,13 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
-            _src.Report(MsgLevel.DEBUG, "Parsed variable declaration", true);
+            variable = Symbol.Variable(id, dataType);
+            if (isGlobal) {
+                _global.Add(variable.Name, variable);
+            } else {
+                _local.Peek().Add(variable.Name, variable);
+            }
+            _src.Report(MsgLevel.DEBUG, $"Variable \"{variable.Name}\" declared as \"{dataType}\"", true);
             return new(true);
         }
 
@@ -198,16 +224,16 @@ namespace jfc {
             // Check for a valid token
             if (_curToken.TokenType == TokenType.INTEGER_RW) {
                 NextToken();
-                return new(true);
+                return new(true, DataType.INTEGER);
             } else if (_curToken.TokenType == TokenType.FLOAT_RW) {
                 NextToken();
-                return new(true);
+                return new(true, DataType.FLOAT);
             } else if (_curToken.TokenType == TokenType.STRING_RW) {
                 NextToken();
-                return new(true);
+                return new(true, DataType.STRING);
             } else if (_curToken.TokenType == TokenType.BOOL_RW) {
                 NextToken();
-                return new(true);
+                return new(true, DataType.BOOL);
             }
 
             // Otherwise error

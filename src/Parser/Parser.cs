@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace jfc {
     public struct ParseInfo {
         public bool Success { get; set; }
 
-        public ParseInfo(bool success) {
+        public object Data { get; set; }
+
+        public ParseInfo(bool success, object data = null) {
             Success = success;
+            Data = data;
         }
     }
 
@@ -15,6 +19,8 @@ namespace jfc {
         private readonly SourceFileReader _src;
         private readonly Scanner _scanner;
         private Token _curToken = null;
+        private readonly Dictionary<string, Symbol> _global = new(new StringNoCaseComparer());
+        private readonly Stack<Dictionary<string, Symbol>> _local = new();
 
         /// <summary> Creates a new parser on the given file </summary>
         /// <param name="src"> The  source code </param>
@@ -23,6 +29,19 @@ namespace jfc {
             _src = src;
             _scanner = new Scanner(src);
             NextToken();
+        }
+
+        private void PushScope() {
+            _local.Push(new(new StringNoCaseComparer()));
+        }
+
+        private Dictionary<string, Symbol> PopScope() {
+            return _local.Pop();
+        }
+
+        private Token NextToken() {
+            _curToken = _scanner.Scan();
+            return _curToken;
         }
 
         public ParseInfo Program() {
@@ -84,11 +103,6 @@ namespace jfc {
             return new(true);
         }
 
-        private Token NextToken() {
-            _curToken = _scanner.Scan();
-            return _curToken;
-        }
-
         private ParseInfo DeclarationList(TokenType[] exitTokens) {
             // Loop to look for declarations
             while (!exitTokens.Contains(_curToken.TokenType)) {
@@ -108,7 +122,7 @@ namespace jfc {
 
         private ParseInfo ParameterList() {
             // First we expect a parameter
-            ParseInfo status = VariableDeclaration();
+            ParseInfo status = VariableDeclaration(false);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Variable declaration expected at the start of a parameter list", true);
                 return new(false);
@@ -118,7 +132,7 @@ namespace jfc {
             // Then we loop until we don't see a comma
             while (_curToken.TokenType == TokenType.COMMA) {
                 NextToken();
-                status = VariableDeclaration();
+                status = VariableDeclaration(false);
                 if (!status.Success) {
                     _src.Report(MsgLevel.DEBUG, "Variable declaration expected after \",\"", true);
                     return new(false);
