@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 
 namespace jfc {
     public partial class Parser {
@@ -26,27 +26,35 @@ namespace jfc {
             return new(true);
         }
 
-        private ParseInfo ProcedureDeclaration() {
+        private ParseInfo ProcedureDeclaration(bool isGlobal = false) {
             // First we expect a procedure header
-            ParseInfo status = ProcedureHeader();
+            ParseInfo status = ProcedureHeader(isGlobal);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Procedure header expected at the start of a procedure declaration", true);
                 return new(false);
             }
 
+            // Now we need to create the scope for the procedure and populate it with the parameters
+            Symbol proc = (Symbol) status.Data;
+            PushScope();
+            foreach (Symbol parameter in proc.Parameters) {
+                _local.Peek().Add(parameter.Name, parameter);
+            }
+
             // Then we expect a procedure body
             status = ProcedureBody();
+            PopScope();
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Procedure header expected after procedure header", true);
                 return new(false);
             }
 
             // We should be good to go
-            _src.Report(MsgLevel.DEBUG, "Parsed procedure declaration", true);
+            _src.Report(MsgLevel.INFO, $"Procedure \"{proc.Name}\" of type \"{proc.DataType}\" parsed", true);
             return new(true);
         }
 
-        private ParseInfo ProcedureHeader() {
+        private ParseInfo ProcedureHeader(bool isGlobal) {
             // First we expect the procedure keyword
             if (_curToken.TokenType != TokenType.PROCEDURE_RW) {
                 _src.Report(MsgLevel.ERROR, "\"PROCEDURE\" expected at the start of a declaration", true);
@@ -57,6 +65,14 @@ namespace jfc {
             // Then we expect an identifier
             if (_curToken.TokenType != TokenType.IDENTIFIER) {
                 _src.Report(MsgLevel.ERROR, "Identifier expected after \"PROCEDURE\"", true);
+                return new(false);
+            }
+
+            // The ID should be unique
+            string id = (string) _curToken.TokenMark;
+            if ((!isGlobal && _local.Peek().ContainsKey(id)) || (isGlobal && _global.ContainsKey(id))) {
+                string scope = isGlobal ? "global" : "local";
+                _src.Report(MsgLevel.ERROR, $"Identifier \"{id}\" already exists in the {scope} scope.", true);
                 return new(false);
             }
             NextToken();
@@ -74,6 +90,7 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Type mark expected after \":\"", true);
                 return new(false);
             }
+            DataType dataType = (DataType) status.Data;
 
             // Then we need a left parens
             if (_curToken.TokenType != TokenType.L_PAREN) {
@@ -83,12 +100,14 @@ namespace jfc {
             NextToken();
 
             // Then we need the parameter list
+            Symbol[] parameters = Array.Empty<Symbol>();
             if (_curToken.TokenType != TokenType.R_PAREN) {
                 status = ParameterList();
                 if (!status.Success) {
                     _src.Report(MsgLevel.DEBUG, "Parameter list expected after \"(\"", true);
                     return new(false);
                 }
+                parameters = (Symbol[]) status.Data;
             }
 
             // And finally we need a right parens
@@ -99,8 +118,14 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
+            Symbol procedure = Symbol.Procedure(id, dataType, parameters);
+            if (isGlobal) {
+                _global.Add(id, procedure);
+            } else {
+                _local.Peek().Add(id, procedure);
+            }
             _src.Report(MsgLevel.DEBUG, "Parsed procedure header", true);
-            return new(true);
+            return new(true, procedure);
         }
 
         private ParseInfo ProcedureBody() {
@@ -158,7 +183,7 @@ namespace jfc {
 
             // The identifier must be unique
             string id = (string) _curToken.TokenMark;
-            if ((!isGlobal && _local.Peek().ContainsKey(id)) || _global.ContainsKey(id)) {
+            if ((!isGlobal && _local.Peek().ContainsKey(id)) || (isGlobal && _global.ContainsKey(id))) {
                 string scope = isGlobal ? "global" : "local";
                 _src.Report(MsgLevel.ERROR, $"Identifier \"{id}\" already exists in the {scope} scope.", true);
                 return new(false);

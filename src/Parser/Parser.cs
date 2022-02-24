@@ -121,10 +121,14 @@ namespace jfc {
         }
 
         private ParseInfo ParameterList() {
+            // We'll create a new scope just for this list
+            PushScope();
+
             // First we expect a parameter
             ParseInfo status = VariableDeclaration(false);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Variable declaration expected at the start of a parameter list", true);
+                PopScope();
                 return new(false);
             }
             int count = 1;
@@ -135,14 +139,18 @@ namespace jfc {
                 status = VariableDeclaration(false);
                 if (!status.Success) {
                     _src.Report(MsgLevel.DEBUG, "Variable declaration expected after \",\"", true);
+                    PopScope();
                     return new(false);
                 }
                 count++;
             }
 
+            // Now we pop the scope and grab the variables
+            Symbol[] parameters = PopScope().Values.ToArray();
+
             // We should be good to go
             _src.Report(MsgLevel.TRACE, $"Parsed list of {count} parameter(s)", true);
-            return new(true);
+            return new(true, parameters);
         }
 
         private ParseInfo StatementList(TokenType[] exitTokens) {
