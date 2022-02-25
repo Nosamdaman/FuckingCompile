@@ -50,7 +50,7 @@ namespace jfc {
             }
 
             // We should be good to go
-            _src.Report(MsgLevel.INFO, $"Procedure \"{proc.Name}\" of type \"{proc.DataType}\" parsed", true);
+            _src.Report(MsgLevel.INFO, $"Procedure \"{proc.Name}\" of type \"{proc.DataType}\" parsed");
             return new(true);
         }
 
