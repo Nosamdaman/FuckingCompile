@@ -55,6 +55,8 @@ namespace jfc {
                 _src.Report(MsgLevel.ERROR, "Identifier expected after \"PROGRAM\"", true);
                 return new(false);
             }
+            string programName = (string) _curToken.TokenMark;
+            _src.Report(MsgLevel.INFO, $"Parsing program \"{programName}\"");
             NextToken();
             if (_curToken.TokenType != TokenType.IS_RW) {
                 _src.Report(MsgLevel.ERROR, "\"IS\" expected after identifier", true);
@@ -63,7 +65,7 @@ namespace jfc {
             NextToken();
 
             // Then we need the program body
-            ParseInfo status = DeclarationList(new[] { TokenType.BEGIN_RW, TokenType.EOF });
+            ParseInfo status = DeclarationList(new[] { TokenType.BEGIN_RW, TokenType.EOF }, true);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected declaration list at the start of program body", true);
                 return new(false);
@@ -100,13 +102,14 @@ namespace jfc {
             if (_curToken.TokenType != TokenType.EOF) {
                 _src.Report(MsgLevel.WARN, "Skipping anything past here", true);
             }
+            _src.Report(MsgLevel.INFO, $"Finished parsing program \"{programName}\"");
             return new(true);
         }
 
-        private ParseInfo DeclarationList(TokenType[] exitTokens) {
+        private ParseInfo DeclarationList(TokenType[] exitTokens, bool isGlobal = false) {
             // Loop to look for declarations
             while (!exitTokens.Contains(_curToken.TokenType)) {
-                ParseInfo status = Declaration();
+                ParseInfo status = Declaration(isGlobal);
                 if (!status.Success) {
                     _src.Report(MsgLevel.DEBUG, "Expected a declaration", true);
                     return new(false);

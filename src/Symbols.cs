@@ -71,7 +71,7 @@ namespace jfc {
                 throw new ArgumentException("Invalid identifier", nameof(name));
             }
             foreach (char cur in name) {
-                if ((cur <= 'A' || cur >= 'Z') && (cur <= 'a' || cur >= 'z') && cur != '_') {
+                if ((cur < 'A' || cur > 'Z') && (cur < 'a' || cur > 'z') && cur != '_') {
                     throw new ArgumentException("Invalid identifier", nameof(name));
                 }
             }

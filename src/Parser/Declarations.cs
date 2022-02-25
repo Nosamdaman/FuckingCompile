@@ -12,7 +12,7 @@ namespace jfc {
             if (_curToken.TokenType == TokenType.VARIABLE_RW) {
                 status = VariableDeclaration(isGlobal);
             } else if (_curToken.TokenType == TokenType.PROCEDURE_RW) {
-                status = ProcedureDeclaration();
+                status = ProcedureDeclaration(isGlobal);
             } else {
                 _src.Report(MsgLevel.ERROR, "\"VARIABLE\" or \"PROCEDURE\" expectin before a declaration", true);
                 return new(false);

@@ -141,7 +141,13 @@ namespace jfc {
 
             // Test code, we'll run the parser
             Parser parser = new(src);
-            parser.Program();
+            ParseInfo status = parser.Program();
+            if (!status.Success) {
+                src.Report(MsgLevel.ERROR, "Unable to successfully parse the program, aborting execution");
+                Environment.ExitCode = 1;
+                src.Dispose();
+                return;
+            }
 
             // Close the file
             src.Dispose();
