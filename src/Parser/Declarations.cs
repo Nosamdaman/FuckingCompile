@@ -235,7 +235,7 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
-            variable = Symbol.Variable(id, dataType);
+            variable = Symbol.VariableArray(id, dataType, arraySize);
             if (isGlobal) {
                 _global.Add(variable.Name, variable);
             } else {
