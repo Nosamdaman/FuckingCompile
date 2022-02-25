@@ -1,9 +1,0 @@
-a + b;
-1.203;
-foo();
-foo(a, b, false);
-a / b;
-a / b + c - 2 * foo(a, b, true);
-not 12;
-- a[3 / 2 + b];
-(a + b + c[a[1 - b]]) * foo(bar);
