@@ -4,6 +4,7 @@ namespace jfc {
     /// <summary> The types of symbols </summary>
     public enum SymbolType { VARIABLE, PROCEDURE }
 
+    /// <summary> Data Types </summary>
     public enum DataType { INTEGER, FLOAT, BOOL, STRING }
 
     /// <summary> Structure representing a symbol </summary>

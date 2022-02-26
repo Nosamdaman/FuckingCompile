@@ -3,6 +3,9 @@ using System;
 namespace jfc {
     /// <summary> Parses the program </summary>
     public partial class Parser {
+        /// <summary> Parses a declaration and adds it to the appropriate symbol table </summary>
+        /// <param name="isGlobal"> Whether or not the declaration is in the global scope. Defaults to false </param>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo Declaration(bool isGlobal = false) {
             // What we do will depend on the first token
             ParseInfo status;
@@ -27,6 +30,9 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses a procedure declaration and adds it to the appropriate symbol table </summary>
+        /// <param name="isGlobal"> Whether or not the procedure is in the global scope. Defaults to false </param>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo ProcedureDeclaration(bool isGlobal = false) {
             // First we expect a procedure header
             ParseInfo status = ProcedureHeader(isGlobal);
@@ -55,6 +61,12 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses a procedure header </summary>
+        /// <param name="isGlobal"> Whether or not the procedure is in the global scope </param>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data parameter will be set to a
+        /// Symbol representing the parsed procedure.
+        /// </returns>
         private ParseInfo ProcedureHeader(bool isGlobal) {
             // First we expect the procedure keyword
             if (_curToken.TokenType != TokenType.PROCEDURE_RW) {
@@ -129,6 +141,8 @@ namespace jfc {
             return new(true, procedure);
         }
 
+        /// <summary> Parses a procedure body </summary>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo ProcedureBody() {
             // First we expect a declaration list
             ParseInfo status = DeclarationList(new[] { TokenType.BEGIN_RW, TokenType.EOF });
@@ -168,6 +182,9 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses a variable declaration and adds it to the appropriate symbol table </summary>
+        /// <param name="isGlobal"> Whether or not the variable is in the global scope </param>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo VariableDeclaration(bool isGlobal) {
             // First we expect the variable keyword
             if (_curToken.TokenType != TokenType.VARIABLE_RW) {
@@ -246,6 +263,11 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses a type mark </summary>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data parameter will be set to a
+        /// DataType giving the type of the type mark.
+        /// </returns>
         private ParseInfo TypeMark() {
             // Check for a valid token
             if (_curToken.TokenType == TokenType.INTEGER_RW) {

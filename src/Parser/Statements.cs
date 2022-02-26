@@ -1,6 +1,8 @@
 namespace jfc {
     /// <summary> Parses the program </summary>
     public partial class Parser {
+        /// <summary> Parses a statement </summary>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo Statement() {
             switch (_curToken.TokenType) {
             case TokenType.IDENTIFIER:
@@ -17,6 +19,8 @@ namespace jfc {
             }
         }
 
+        /// <summary> Parses an assignment statement </summary>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo AssignmentStatement() {
             ParseInfo status;
 
@@ -63,6 +67,8 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses an if statement </summary>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo IfStatement() {
             // First we need the if keyword
             if (_curToken.TokenType != TokenType.IF_RW) {
@@ -130,6 +136,8 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses a loop statement </summary>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo LoopStatement() {
             // First we expect the "for" keyword
             if (_curToken.TokenType != TokenType.FOR_RW) {
@@ -189,6 +197,8 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses a return statement </summary>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo ReturnStatement() {
             // First we expect the return keyword
             if (_curToken.TokenType != TokenType.RETURN_RW) {
