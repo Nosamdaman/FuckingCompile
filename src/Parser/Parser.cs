@@ -35,9 +35,40 @@ namespace jfc {
         /// <param name="src"> The  source code </param>
         /// <exception cref="ArgumentNullException"/>
         public Parser(SourceFileReader src) {
+            // Add the scanner and get the first symbol
             _src = src;
             _scanner = new Scanner(src);
             NextToken();
+
+            // Seed the global symbol table with reserved procedures
+            Symbol getBool = Symbol.Procedure("GETBOOL", DataType.BOOL, null);
+            Symbol getInteger = Symbol.Procedure("GETINTEGER", DataType.INTEGER, null);
+            Symbol getFloat = Symbol.Procedure("GETFLOAT", DataType.FLOAT, null);
+            Symbol getString = Symbol.Procedure("GETSTRING", DataType.STRING, null);
+            Symbol putBool = Symbol.Procedure("PUTBOOL", DataType.BOOL, new[] {
+                Symbol.Variable("VALUE", DataType.BOOL)
+            });
+            Symbol putInteger = Symbol.Procedure("PUTINTEGER", DataType.BOOL, new[] {
+                Symbol.Variable("VALUE", DataType.INTEGER)
+            });
+            Symbol putFloat = Symbol.Procedure("PUTFLOAT", DataType.BOOL, new[] {
+                Symbol.Variable("VALUE", DataType.FLOAT)
+            });
+            Symbol putString = Symbol.Procedure("PUTSTRING", DataType.BOOL, new[] {
+                Symbol.Variable("VALUE", DataType.STRING)
+            });
+            Symbol sqrt = Symbol.Procedure("SQRT", DataType.FLOAT, new[] {
+                Symbol.Variable("VALUE", DataType.INTEGER)
+            });
+            _global.Add("getBool", getBool);
+            _global.Add("getInteger", getInteger);
+            _global.Add("getFloat", getFloat);
+            _global.Add("getString", getString);
+            _global.Add("putBool", putBool);
+            _global.Add("putInteger", putInteger);
+            _global.Add("putFloat", putFloat);
+            _global.Add("putString", putString);
+            _global.Add("sqrt", sqrt);
         }
 
         /// <summary> Adds a new local scope to the local symbol table </summary>
