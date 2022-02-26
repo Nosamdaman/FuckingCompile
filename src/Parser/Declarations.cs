@@ -1,6 +1,7 @@
 using System;
 
 namespace jfc {
+    /// <summary> Parses the program </summary>
     public partial class Parser {
         private ParseInfo Declaration(bool isGlobal = false) {
             // What we do will depend on the first token

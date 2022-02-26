@@ -67,11 +67,11 @@ namespace jfc {
             if (string.IsNullOrEmpty(name)) {
                 throw new ArgumentNullException(nameof(name));
             }
-            if ((name[0] <= 'A' || name[0] >= 'Z') && (name[0] <= 'a' || name[0] >= 'z')) {
+            if ((name[0] < 'A' || name[0] > 'Z') && (name[0] < 'a' || name[0] > 'z')) {
                 throw new ArgumentException("Invalid identifier", nameof(name));
             }
             foreach (char cur in name) {
-                if ((cur < 'A' || cur > 'Z') && (cur < 'a' || cur > 'z') && cur != '_') {
+                if ((cur < 'A' || cur > 'Z') && (cur < 'a' || cur > 'z') && (cur < '0' || cur > '9') && cur != '_') {
                     throw new ArgumentException("Invalid identifier", nameof(name));
                 }
             }

@@ -3,11 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace jfc {
+    /// <summary> Structure representing the status of the parse operation </summary>
     public struct ParseInfo {
+        /// <summary> Whether or not the parse was successful </summary>
         public bool Success { get; set; }
 
+        /// <summary>
+        /// Object giving information about the parse. It's exact type will be determined by the parse method which
+        /// created it.
+        /// </summary>
         public object Data { get; set; }
 
+        /// <summary> Instantiate a new ParseInfo object </summary>
+        /// <param name="success"> Whether or not the parse succeeded </param>
+        /// <param name="data"> Information about the parse. Defaults to null </param>
         public ParseInfo(bool success, object data = null) {
             Success = success;
             Data = data;
@@ -31,19 +40,26 @@ namespace jfc {
             NextToken();
         }
 
+        /// <summary> Adds a new local scope to the local symbol table </summary>
         private void PushScope() {
             _local.Push(new(new StringNoCaseComparer()));
         }
 
+        /// <summary> Pops the current local scope off of the symbol table </summary>
+        /// <returns> The scope which was just popped off </returns>
         private Dictionary<string, Symbol> PopScope() {
             return _local.Pop();
         }
 
+        /// <summary> Scans for the next token in the source file </summary>
+        /// <returns> The next token </returns>
         private Token NextToken() {
             _curToken = _scanner.Scan();
             return _curToken;
         }
 
+        /// <summary> Parses the top-level program of a program </summary>
+        /// <returns> A ParseInfo with no special data </returns>
         public ParseInfo Program() {
             // First we need the program header
             if (_curToken.TokenType != TokenType.PROGRAM_RW) {
@@ -106,6 +122,15 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses a list of declarations </summary>
+        /// <param name="exitTokens">
+        /// An array of tokens which should signal the end of the declaration list. If any token in this list is seen at
+        /// what could be the start of a new declaration, execution will end.
+        /// </param>
+        /// <param name="isGlobal">
+        /// Whether or not all declarations in the list are to be treated as global. Defaults to false.
+        /// </param>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo DeclarationList(TokenType[] exitTokens, bool isGlobal = false) {
             // Loop to look for declarations
             while (!exitTokens.Contains(_curToken.TokenType)) {
@@ -123,6 +148,11 @@ namespace jfc {
             return new(true);
         }
 
+        /// <summary> Parses a list of parameters </summary>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data parameter will be set to an
+        /// array of Symbols representing the parsed parameters.
+        /// </returns>
         private ParseInfo ParameterList() {
             // We'll create a new scope just for this list
             PushScope();
@@ -156,6 +186,12 @@ namespace jfc {
             return new(true, parameters);
         }
 
+        /// <summary> Parses a list of statements </summary>
+        /// <param name="exitTokens">
+        /// An array of tokens which should signal the end of the statement list. If any token in this list is seen at
+        /// what could be the start of a new statement, execution will end.
+        /// </param>
+        /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo StatementList(TokenType[] exitTokens) {
             // Loop to look for statements
             while (!exitTokens.Contains(_curToken.TokenType)) {
@@ -173,6 +209,7 @@ namespace jfc {
             return new(true);
         }
 
+        // TODO: TYPE VALIDATION
         private ParseInfo ArgumentList() {
             // We should have an expression first
             ParseInfo status = Expression();

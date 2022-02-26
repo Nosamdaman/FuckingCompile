@@ -1,4 +1,5 @@
 namespace jfc {
+    /// <summary> Parses the program </summary>
     public partial class Parser {
         private ParseInfo Statement() {
             switch (_curToken.TokenType) {

@@ -1,6 +1,7 @@
 using System.Text;
 
 namespace jfc {
+    /// <summary> Parses the program </summary>
     public partial class Parser {
         private ParseInfo Expression() {
             // First check for a "not"
