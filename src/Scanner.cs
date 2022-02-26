@@ -6,10 +6,6 @@ namespace jfc {
     /// <summary> Scans the document for tokens </summary>
     public class Scanner {
         private readonly SourceFileReader _src;
-        private readonly Dictionary<string, Token> _symbolTable = new(new StringNoCaseComparer());
-
-        /// <summary> The symbol table </summary>
-        public Dictionary<string, Token> SymbolTable { get => _symbolTable; }
 
         /// <summary> Creates a new scanner on the given file </summary>
         /// <param name="src"> The source code </param>
@@ -181,71 +177,28 @@ namespace jfc {
                 string identifier = sb.ToString();
 
                 // Now we just need to return the reserved word or identifier
-                Token token;
-                switch (identifier.ToUpper()) {
-                case "PROGRAM":
-                    token = new(TokenType.PROGRAM_RW);
-                    break;
-                case "IS":
-                    token = new(TokenType.IS_RW);
-                    break;
-                case "BEGIN":
-                    token = new(TokenType.BEGIN_RW);
-                    break;
-                case "END":
-                    token = new(TokenType.END_RW);
-                    break;
-                case "GLOBAL":
-                    token = new(TokenType.GLOBAL_RW);
-                    break;
-                case "PROCEDURE":
-                    token = new(TokenType.PROCEDURE_RW);
-                    break;
-                case "VARIABLE":
-                    token = new(TokenType.VARIABLE_RW);
-                    break;
-                case "INTEGER":
-                    token = new(TokenType.INTEGER_RW);
-                    break;
-                case "FLOAT":
-                    token = new(TokenType.FLOAT_RW);
-                    break;
-                case "STRING":
-                    token = new(TokenType.STRING_RW);
-                    break;
-                case "BOOL":
-                    token = new(TokenType.BOOL_RW);
-                    break;
-                case "IF":
-                    token = new(TokenType.IF_RW);
-                    break;
-                case "THEN":
-                    token = new(TokenType.THEN_RW);
-                    break;
-                case "ELSE":
-                    token = new(TokenType.ELSE_RW);
-                    break;
-                case "FOR":
-                    token = new(TokenType.FOR_RW);
-                    break;
-                case "RETURN":
-                    token = new(TokenType.RETURN_RW);
-                    break;
-                case "NOT":
-                    token = new(TokenType.NOT_RW);
-                    break;
-                case "TRUE":
-                    token = new(TokenType.TRUE_RW);
-                    break;
-                case "FALSE":
-                    token = new(TokenType.FALSE_RW);
-                    break;
-                default:
-                    if (!_symbolTable.ContainsKey(identifier))
-                        _symbolTable[identifier] = new(TokenType.IDENTIFIER, identifier);
-                    token = _symbolTable[identifier];
-                    break;
-                }
+                Token token = identifier.ToUpper() switch {
+                    "PROGRAM"   => new(TokenType.PROGRAM_RW),
+                    "IS"        => new(TokenType.IS_RW),
+                    "BEGIN"     => new(TokenType.BEGIN_RW),
+                    "END"       => new(TokenType.END_RW),
+                    "GLOBAL"    => new(TokenType.GLOBAL_RW),
+                    "PROCEDURE" => new(TokenType.PROCEDURE_RW),
+                    "VARIABLE"  => new(TokenType.VARIABLE_RW),
+                    "INTEGER"   => new(TokenType.INTEGER_RW),
+                    "FLOAT"     => new(TokenType.FLOAT_RW),
+                    "STRING"    => new(TokenType.STRING_RW),
+                    "BOOL"      => new(TokenType.BOOL_RW),
+                    "IF"        => new(TokenType.IF_RW),
+                    "THEN"      => new(TokenType.THEN_RW),
+                    "ELSE"      => new(TokenType.ELSE_RW),
+                    "FOR"       => new(TokenType.FOR_RW),
+                    "RETURN"    => new(TokenType.RETURN_RW),
+                    "NOT"       => new(TokenType.NOT_RW),
+                    "TRUE"      => new(TokenType.TRUE_RW),
+                    "FALSE"     => new(TokenType.FALSE_RW),
+                    _           => new(TokenType.IDENTIFIER, identifier)
+                };
                 return token;
             }
 
