@@ -58,7 +58,7 @@ namespace jfc {
                 return new(false);
             }
 
-            _src.Report(MsgLevel.DEBUG, "Parsed assignment statement", true);
+            _src.Report(MsgLevel.TRACE, "Parsed assignment statement", true);
             return new(true);
         }
 
@@ -125,7 +125,7 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
-            _src.Report(MsgLevel.DEBUG, "Parsed if statement", true);
+            _src.Report(MsgLevel.TRACE, "Parsed if statement", true);
             return new(true);
         }
 
@@ -184,7 +184,7 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
-            _src.Report(MsgLevel.DEBUG, "Parsed loop statement", true);
+            _src.Report(MsgLevel.TRACE, "Parsed loop statement", true);
             return new(true);
         }
 
@@ -204,7 +204,7 @@ namespace jfc {
             }
 
             // We should be good to go
-            _src.Report(MsgLevel.DEBUG, "Parsed return statement", true);
+            _src.Report(MsgLevel.TRACE, "Parsed return statement", true);
             return new(true);
         }
     }
