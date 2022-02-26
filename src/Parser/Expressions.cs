@@ -188,6 +188,11 @@ namespace jfc {
             return TermPrime(sb);
         }
 
+        /// <summary> Parses a factor </summary>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data parameter will be set to the
+        /// DataType of the factor.
+        /// </returns>
         private ParseInfo Factor() {
             // The first step is to check if we have have a left parens. If so, we should have a nested expression
             // statement.
@@ -204,62 +209,78 @@ namespace jfc {
                 }
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as a nested expression", true);
-                return new(true);
+                return new(true, status.Data);
             }
 
             // If that fails, we'll see if we have a procedure or name. If either is the case, then we'll need to see an
             // identifier first
             if (_curToken.TokenType == TokenType.IDENTIFIER) {
-                // For now we'll just assume that it could be either one, and not worry about the symbol table
-                NextToken();
-
-                // If we have a procedure, then we expect expect an argument list in parens
-                if (_curToken.TokenType == TokenType.L_PAREN) {
-                    NextToken();
-
-                    // The list could be empty
-                    if (_curToken.TokenType == TokenType.R_PAREN) {
-                        NextToken();
-                        return new(true);
-                    }
-
-                    // Or it could have arguments
-                    ParseInfo status = ArgumentList();
-                    if (!status.Success) {
-                        _src.Report(MsgLevel.DEBUG, "Argument list expected after \"(\"", true);
-                        return new(false);
-                    }
-
-                    // Either way, it needs to end with a right parens
-                    if (_curToken.TokenType != TokenType.R_PAREN) {
-                        _src.Report(MsgLevel.ERROR, "\")\" expected after argument list", true);
-                        return new(false);
-                    }
-                    NextToken();
-                    _src.Report(MsgLevel.TRACE, "Parsed factor as procedure call", true);
-                    return new(true);
+                // First we'll we'll ensure that our symbol exists
+                string id = (string) _curToken.TokenMark;
+                if (!TryGetSymbol(id, out Symbol symbol)) {
+                    _src.Report(MsgLevel.ERROR, $"Reference to unkown symbol \"{id}\"", true);
+                    return new(false);
                 }
 
-                // If we have a name, then we might have an indexing operation
-                if (_curToken.TokenType == TokenType.L_BRACKET) {
-                    NextToken();
-                    ParseInfo status = Expression();
-                    if (!status.Success) {
-                        _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
-                        return new(false);
-                    }
-                    if (_curToken.TokenType != TokenType.R_BRACKET) {
-                        _src.Report(MsgLevel.ERROR, "\"]\" expected after expression", true);
-                        return new(false);
-                    }
-                    NextToken();
-                    _src.Report(MsgLevel.TRACE, "Parsed factor as name with indexing", true);
+                // Now we parse the symbol depending on whether it's a variable or a procedure
+                DataType returnType;
+                if (symbol.SymbolType == SymbolType.VARIABLE) {
+                    
+                } else if (symbol.SymbolType == SymbolType.PROCEDURE) {
                 } else {
-                    _src.Report(MsgLevel.TRACE, "Parsed factor as name", true);
+                    throw new System.Exception("How the fuck did you get here?");
                 }
 
-                // Either way, we should be good here
-                return new(true);
+                // // For now we'll just assume that it could be either one, and not worry about the symbol table
+                // NextToken();
+
+                // // If we have a procedure, then we expect expect an argument list in parens
+                // if (_curToken.TokenType == TokenType.L_PAREN) {
+                //     NextToken();
+
+                //     // The list could be empty
+                //     if (_curToken.TokenType == TokenType.R_PAREN) {
+                //         NextToken();
+                //         return new(true);
+                //     }
+
+                //     // Or it could have arguments
+                //     ParseInfo status = ArgumentList();
+                //     if (!status.Success) {
+                //         _src.Report(MsgLevel.DEBUG, "Argument list expected after \"(\"", true);
+                //         return new(false);
+                //     }
+
+                //     // Either way, it needs to end with a right parens
+                //     if (_curToken.TokenType != TokenType.R_PAREN) {
+                //         _src.Report(MsgLevel.ERROR, "\")\" expected after argument list", true);
+                //         return new(false);
+                //     }
+                //     NextToken();
+                //     _src.Report(MsgLevel.TRACE, "Parsed factor as procedure call", true);
+                //     return new(true);
+                // }
+
+                // // If we have a name, then we might have an indexing operation
+                // if (_curToken.TokenType == TokenType.L_BRACKET) {
+                //     NextToken();
+                //     ParseInfo status = Expression();
+                //     if (!status.Success) {
+                //         _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
+                //         return new(false);
+                //     }
+                //     if (_curToken.TokenType != TokenType.R_BRACKET) {
+                //         _src.Report(MsgLevel.ERROR, "\"]\" expected after expression", true);
+                //         return new(false);
+                //     }
+                //     NextToken();
+                //     _src.Report(MsgLevel.TRACE, "Parsed factor as name with indexing", true);
+                // } else {
+                //     _src.Report(MsgLevel.TRACE, "Parsed factor as name", true);
+                // }
+
+                // // Either way, we should be good here
+                // return new(true);
             }
 
             // If we have a minus symbol, then we could have either a name or a number
@@ -326,6 +347,15 @@ namespace jfc {
             // Anything else is unacceptable
             _src.Report(MsgLevel.ERROR, "Expected a factor", true);
             return new(false);
+        }
+
+        /// <summary> Parses a procedure call </summary>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data parameter will be set to the
+        /// DataType of the procedure.
+        /// </returns>
+        private ParseInfo ProcedureCall() {
+            throw new System.NotImplementedException();
         }
     }
 }

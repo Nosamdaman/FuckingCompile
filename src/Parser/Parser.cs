@@ -82,6 +82,22 @@ namespace jfc {
             return _local.Pop();
         }
 
+        /// <summary> Tries to get a symbol from the symbol table </summary>
+        /// <param name="identifier"> The id of the symbol to be retrieved </param>
+        /// <param name="symbol"> The symbol being retrieved </param>
+        /// <returns> Whether or not the symbol was found </returns>
+        private bool TryGetSymbol(string identifier, out Symbol symbol) {
+            if (_local.Peek().ContainsKey(identifier)) {
+                symbol = _local.Peek()[identifier];
+                return true;
+            } else if (_global.ContainsKey(identifier)) {
+                symbol = _global[identifier];
+                return true;
+            }
+            symbol = Symbol.Variable("FAIL", DataType.BOOL);
+            return false;
+        }
+
         /// <summary> Scans for the next token in the source file </summary>
         /// <returns> The next token </returns>
         private Token NextToken() {
