@@ -234,6 +234,9 @@ namespace jfc {
                 }
                 _src.Report(MsgLevel.DEBUG, $"Variable \"{variable.Name}\" declared as \"{dataType}\"", true);
                 return new(true);
+            } else if (dataType == DataType.STRING) {
+                _src.Report(MsgLevel.DEBUG, $"Strings cannot be arrays", true);
+                return new(false);
             }
             NextToken();
 

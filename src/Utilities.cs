@@ -13,13 +13,13 @@ namespace jfc {
         public bool Equals(string s0, string s1) {
             if (s0 == null && s1 == null) return true;
             if (s0 == null || s1 == null) return false;
-            return s0.Equals(s1, System.StringComparison.CurrentCultureIgnoreCase);
+            return s0.Equals(s1, StringComparison.CurrentCultureIgnoreCase);
         }
 
         /// <summary> Gets the hash code for a string </summary>
         /// <param name="s"> The string whose hash code is to be computed </param>
         /// <returns> The hash code of the string </returns>
-        public int GetHashCode(string s) => s?.GetHashCode() ?? 0;
+        public int GetHashCode(string s) => s?.ToUpper().GetHashCode() ?? 0;
     }
 
     /// <summary> Reporting Levels </summary>

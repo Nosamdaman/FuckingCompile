@@ -87,7 +87,7 @@ namespace jfc {
         /// <param name="symbol"> The symbol being retrieved </param>
         /// <returns> Whether or not the symbol was found </returns>
         private bool TryGetSymbol(string identifier, out Symbol symbol) {
-            if (_local.Peek().ContainsKey(identifier)) {
+            if (_local.Count > 0 && _local.Peek().ContainsKey(identifier)) {
                 symbol = _local.Peek()[identifier];
                 return true;
             } else if (_global.ContainsKey(identifier)) {

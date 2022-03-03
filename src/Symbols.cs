@@ -76,6 +76,9 @@ namespace jfc {
                     throw new ArgumentException("Invalid identifier", nameof(name));
                 }
             }
+            if (dataType == DataType.STRING && isArray) {
+                throw new ArgumentException("String arrays are not allowed", nameof(arraySize));
+            }
             if (symbolType == SymbolType.VARIABLE && isArray && arraySize < 1) {
                 throw new ArgumentException("Array size must be greater than 0", nameof(arraySize));
             }
