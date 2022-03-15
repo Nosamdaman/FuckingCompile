@@ -248,38 +248,54 @@ namespace jfc {
 
                 // If we see an identifier, it's a name
                 if (_curToken.TokenType == TokenType.IDENTIFIER) {
-                    NextToken();
-
-                    // If we have a name, then we might have an indexing operation
-                    if (_curToken.TokenType == TokenType.L_BRACKET) {
-                        NextToken();
-                        ParseInfo status = Expression();
-                        if (!status.Success) {
-                            _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
-                            return new(false);
-                        }
-                        if (_curToken.TokenType != TokenType.R_BRACKET) {
-                            _src.Report(MsgLevel.ERROR, "\"]\" expected after expression", true);
-                            return new(false);
-                        }
-                        NextToken();
-                        _src.Report(MsgLevel.TRACE, "Parsed factor as minus name with indexing", true);
-                    } else {
-                        _src.Report(MsgLevel.TRACE, "Parsed factor as minus name", true);
+                    // First ensure that the symbol exists and is a variable
+                    string id = (string) _curToken.TokenMark;
+                    if (!TryGetSymbol(id, out Symbol symbol)) {
+                        _src.Report(MsgLevel.ERROR, $"Reference to unkown symbol \"{id}\"", true);
+                        return new(false);
+                    } else if (symbol.SymbolType != SymbolType.VARIABLE) {
+                        _src.Report(MsgLevel.ERROR, "Variable expected after \"-\"", true);
+                        return new(false);
                     }
 
-                    // We should be good here
-                    return new(true);
+                    // Then ensure that the symbol is properly referenced
+                    ParseInfo status = VariableReference(symbol);
+                    if (!status.Success) {
+                        _src.Report(MsgLevel.DEBUG, $"Unable to parse reference to symbol \"{symbol.Name}\"", true);
+                        return new(false);
+                    }
+
+                    // The minus sign is an implicit converter, so we need to get our types straight
+                    (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
+                    if (dataType == DataType.STRING) {
+                        _src.Report(MsgLevel.ERROR, $"Type \"{DataType.STRING}\" cannot be inverted", true);
+                        return new(false);
+                    }
+                    Symbol.TryGetCompatibleType(DataType.INTEGER, dataType, out DataType result);
+
+                    // We should be good to go
+                    _src.Report(MsgLevel.TRACE, $"Parsed factor as minus \"{symbol.Name}\"", true);
+                    return new(true, (result, arraySize));
                 }
 
                 // Otherwise, it should be a number
-                if (_curToken.TokenType != TokenType.INTEGER && _curToken.TokenType != TokenType.FLOAT) {
+                DataType d;
+                if (_curToken.TokenType == TokenType.INTEGER ||
+                    _curToken.TokenType == TokenType.TRUE_RW ||
+                    _curToken.TokenType == TokenType.FALSE_RW
+                ) {
+                    d = DataType.INTEGER;
+                } else if (_curToken.TokenType == TokenType.FLOAT) {
+                    d = DataType.FLOAT;
+                } else {
                     _src.Report(MsgLevel.ERROR, "Name or number expected after \"-\"", true);
                     return new(false);
                 }
                 NextToken();
+
+                // We should be goood to go
                 _src.Report(MsgLevel.TRACE, "Parsed factor as minus number literal", true);
-                return new(true);
+                return new(true, (d, 0));
             }
 
             // We can accept numbers
