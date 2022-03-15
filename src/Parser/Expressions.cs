@@ -298,25 +298,32 @@ namespace jfc {
                 return new(true, (d, 0));
             }
 
-            // We can accept numbers
-            if (_curToken.TokenType == TokenType.INTEGER || _curToken.TokenType == TokenType.FLOAT) {
+            // We can accept integers
+            if (_curToken.TokenType == TokenType.INTEGER) {
                 NextToken();
-                _src.Report(MsgLevel.TRACE, "Parsed factor as number literal", true);
-                return new(true);
+                _src.Report(MsgLevel.TRACE, "Parsed factor as integer literal", true);
+                return new(true, (DataType.INTEGER, 0));
+            }
+
+            // We can accept floating-point values
+            if (_curToken.TokenType == TokenType.FLOAT) {
+                NextToken();
+                _src.Report(MsgLevel.TRACE, "Parsed factor as floating-point literal", true);
+                return new(true, (DataType.FLOAT, 0));
             }
 
             // We can accept strings
             if (_curToken.TokenType == TokenType.STRING) {
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as string literal", true);
-                return new(true);
+                return new(true, (DataType.STRING, 0));
             }
 
             // We can accept boolean literals
             if (_curToken.TokenType == TokenType.TRUE_RW || _curToken.TokenType == TokenType.FALSE_RW) {
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as boolean literal", true);
-                return new(true);
+                return new(true, (DataType.BOOL, 0));
             }
 
             // Anything else is unacceptable
