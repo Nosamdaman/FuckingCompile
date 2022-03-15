@@ -8,10 +8,11 @@ namespace jfc {
             // First check for a "not"
             StringBuilder sb = new();
             sb.Append("Parsed expression as");
+            bool haveNot = false;
             if (_curToken.TokenType == TokenType.NOT_RW) {
+                haveNot = true;
                 NextToken();
                 sb.Append(" not");
-                _src.Report(MsgLevel.WARN, "Get clarification on the \"NOT\" symbol", true);
             }
             sb.Append(" arithmetic operation");
 
@@ -21,12 +22,27 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Expected an arithmetic operation", true);
                 return new(false);
             }
+            (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
+
+            // Ensure the data type is valid
+            if (haveNot && dataType != DataType.INTEGER) {
+                _src.Report(MsgLevel.ERROR, $"\"NOT\" operator not allowed for type \"{dataType}\"", true);
+                return new(false);
+            }
 
             // Then we see how many operations to chain together
-            return ExpressionPrime(sb);
+            return ExpressionPrime(dataType, arraySize, sb);
         }
 
-        private ParseInfo ExpressionPrime(StringBuilder sb) {
+        /// <summary> Parses the right tail of an expression </summary>
+        /// <param name="lDataType"> The data type of the left-hand arithmetic operation </param>
+        /// <param name="lArraySize"> The array size of the left-hand arithmetic operation </param>
+        /// <param name="sb"> A StringBuilder object for building up the log message </param>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
+        /// tuple containing the data type and array size of the final expression.
+        /// </returns>
+        private ParseInfo ExpressionPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
             // First check if we have a logical operator
             char symbol;
             if (_curToken.TokenType == TokenType.AND) {
@@ -35,12 +51,18 @@ namespace jfc {
                 symbol = '|';
             } else {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
-                return new(true);
+                return new(true, (lDataType, lArraySize));
             }
-            NextToken();
-            sb.Append($" {symbol}");
+
+            // Ensure the left-hand side is valid
+            if (lDataType != DataType.INTEGER) {
+                _src.Report(MsgLevel.ERROR, $"\"{symbol}\" operator not allowed for type \"{lDataType}\"", true);
+                return new(false);
+            }
 
             // Then check for a "not"
+            NextToken();
+            sb.Append($" {symbol}");
             if (_curToken.TokenType == TokenType.NOT_RW) {
                 NextToken();
                 sb.Append(" not");
@@ -53,9 +75,27 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, $"Expected an arithmetic operation after \"{symbol}\"", true);
                 return new(false);
             }
+            (DataType rDataType, int rArraySize) = ((DataType, int)) status.Data;
+
+            // Ensure the right-hand side is valid
+            if (rDataType != DataType.INTEGER) {
+                _src.Report(MsgLevel.ERROR, $"\"{symbol}\" operator not allowed for type \"{rDataType}\"", true);
+                return new(false);
+            }
+
+            // Ensure that the array sizes are valid
+            int arraySize;
+            if (lArraySize == 0 || rArraySize == 0) {
+                arraySize = lArraySize > rArraySize ? lArraySize : rArraySize;
+            } else if (lArraySize == rArraySize) {
+                arraySize = lArraySize;
+            } else {
+                _src.Report(MsgLevel.ERROR, "Array size mismatch", true);
+                return new(false);
+            }
 
             // Then we do it all over again
-            return ExpressionPrime(sb);
+            return ExpressionPrime(DataType.INTEGER, arraySize, sb);
         }
 
         /// <summary> Parses an arithmetic operation </summary>
@@ -206,7 +246,7 @@ namespace jfc {
 
             // Ensure the left-hand side is valid
             if (!canBeString && lDataType == DataType.STRING) {
-                _src.Report(MsgLevel.ERROR, $"\"{symbol}\" operator not allowed for type {lDataType}", true);
+                _src.Report(MsgLevel.ERROR, $"\"{symbol}\" operator not allowed for type \"{lDataType}\"", true);
                 return new(false);
             }
 
@@ -222,7 +262,7 @@ namespace jfc {
 
             // Ensure the right-hand side is valid
             if (!canBeString && rDataType == DataType.STRING) {
-                _src.Report(MsgLevel.ERROR, $"\"{symbol}\" operator not allowed for type {rDataType}", true);
+                _src.Report(MsgLevel.ERROR, $"\"{symbol}\" operator not allowed for type \"{rDataType}\"", true);
                 return new(false);
             }
 
