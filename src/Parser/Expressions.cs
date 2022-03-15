@@ -150,6 +150,11 @@ namespace jfc {
             return RelationPrime(sb);
         }
 
+        /// <summary> Parses a term </summary>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
+        /// tuple containing the data type and array size of the term.
+        /// </returns>
         private ParseInfo Term() {
             // First we expect a factor
             ParseInfo status = Factor();
@@ -157,14 +162,23 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Expected a factor", true);
                 return new(false);
             }
+            (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
 
             // Then we see how many factors we need to chain together
             StringBuilder sb = new();
             sb.Append("Parsed term as factor");
-            return TermPrime(sb);
+            return TermPrime(dataType, arraySize, sb);
         }
 
-        private ParseInfo TermPrime(StringBuilder sb) {
+        /// <summary> Parses the right tail of a term </summary>
+        /// <param name="lDataType"> The data type of the left-hand factor </param>
+        /// <param name="lArraySize"> The array size of the left-hand factor </param>
+        /// <param name="sb"> A StringBuilder object for building up the log message </param>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
+        /// tuple containing the data type and array size of the final term.
+        /// </returns>
+        private ParseInfo TermPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
             // First check if we have a multiplication operation
             char symbol;
             if (_curToken.TokenType == TokenType.TIMES) {
@@ -173,7 +187,11 @@ namespace jfc {
                 symbol = '/';
             } else {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
-                return new(true);
+                return new(true, (lDataType, lArraySize));
+            }
+            if (lDataType == DataType.STRING) {
+                _src.Report(MsgLevel.ERROR, $"Cannot multiply type \"{DataType.STRING}\"", true);
+                return new(false);
             }
             NextToken();
             sb.Append($" {symbol} factor");
@@ -184,9 +202,27 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, $"Expected a factor after \"{symbol}\"", true);
                 return new(false);
             }
+            (DataType rDataType, int rArraySize) = ((DataType, int)) status.Data;
+
+            // Get the resulting data type
+            if (!Symbol.TryGetCompatibleType(lDataType, rDataType, out DataType result)) {
+                _src.Report(MsgLevel.ERROR, $"\"{rDataType}\" is not castable to \"{lDataType}\"", true);
+                return new(false);
+            }
+
+            // Ensure that the array sizes are valid
+            int arraySize;
+            if (lArraySize == 0 || rArraySize == 0) {
+                arraySize = lArraySize > rArraySize ? lArraySize : rArraySize;
+            } else if (lArraySize == rArraySize) {
+                arraySize = lArraySize;
+            } else {
+                _src.Report(MsgLevel.ERROR, "Array size mismatch", true);
+                return new(false);
+            }
 
             // Now we go again
-            return TermPrime(sb);
+            return TermPrime(result, arraySize, sb);
         }
 
         /// <summary> Parses a factor </summary>
@@ -450,7 +486,7 @@ namespace jfc {
             int expectedArraySize = 0;
             if (symbol.IsArray) { expectedArraySize = symbol.ArraySize; }
             if (!Symbol.TryGetCompatibleType(symbol.DataType, actualDataType, out DataType _)) {
-                _src.Report(MsgLevel.ERROR, $"Type \"{actualDataType}\" is not castable to \"{symbol.DataType}", true);
+                _src.Report(MsgLevel.ERROR, $"\"{actualDataType}\" is not castable to \"{symbol.DataType}\"", true);
                 return new(false);
             }
 
