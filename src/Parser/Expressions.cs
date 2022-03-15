@@ -11,6 +11,7 @@ namespace jfc {
             if (_curToken.TokenType == TokenType.NOT_RW) {
                 NextToken();
                 sb.Append(" not");
+                _src.Report(MsgLevel.WARN, "Get clarification on the \"NOT\" symbol", true);
             }
             sb.Append(" arithmetic operation");
 
@@ -57,6 +58,11 @@ namespace jfc {
             return ExpressionPrime(sb);
         }
 
+        /// <summary> Parses an arithmetic operation </summary>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
+        /// tuple containing the data type and array size of the arithmetic operation.
+        /// </returns>
         private ParseInfo ArithOp() {
             // First we expect a relation
             ParseInfo status = Relation();
@@ -64,14 +70,23 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Expected a relation", true);
                 return new(false);
             }
+            (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
 
             // Then we see how many relations we need to chain together
             StringBuilder sb = new();
             sb.Append("Parsed arithmetic operation as relation");
-            return ArithOpPrime(sb);
+            return ArithOpPrime(dataType, arraySize, sb);
         }
 
-        private ParseInfo ArithOpPrime(StringBuilder sb) {
+        /// <summary> Parses the right tail of an arithmetic operation </summary>
+        /// <param name="lDataType"> The data type of the left-hand relation </param>
+        /// <param name="lArraySize"> The array size of the left-hand relation </param>
+        /// <param name="sb"> A StringBuilder object for building up the log message </param>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
+        /// tuple containing the data type and array size of the final arithmetic operation.
+        /// </returns>
+        private ParseInfo ArithOpPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
             // First check if we have an arithmatic operator
             char symbol;
             if (_curToken.TokenType == TokenType.PLUS) {
@@ -80,7 +95,7 @@ namespace jfc {
                 symbol = '-';
             } else {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
-                return new(true);
+                return new(true, (lDataType, lArraySize));
             }
             NextToken();
             sb.Append($" {symbol} relation");
@@ -91,11 +106,40 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, $"Expected a relation after \"{symbol}\"", true);
                 return new(false);
             }
+            (DataType rDataType, int rArraySize) = ((DataType, int)) status.Data;
+
+            // Get the resulting data type
+            if (!Symbol.TryGetCompatibleType(lDataType, rDataType, out DataType result)) {
+                _src.Report(MsgLevel.ERROR, $"\"{rDataType}\" is not castable to \"{lDataType}\"", true);
+                return new(false);
+            }
+
+            // Ensure we're not subtracting strings
+            if (symbol == '-' && rDataType == DataType.STRING) {
+                _src.Report(MsgLevel.ERROR, $"Invalid operator \"-\" on type \"{DataType.STRING}\"", true);
+                return new(false);
+            }
+
+            // Ensure that the array sizes are valid
+            int arraySize;
+            if (lArraySize == 0 || rArraySize == 0) {
+                arraySize = lArraySize > rArraySize ? lArraySize : rArraySize;
+            } else if (lArraySize == rArraySize) {
+                arraySize = lArraySize;
+            } else {
+                _src.Report(MsgLevel.ERROR, "Array size mismatch", true);
+                return new(false);
+            }
 
             // Then we go again
-            return ArithOpPrime(sb);
+            return ArithOpPrime(result, arraySize, sb);
         }
 
+        /// <summary> Parses a relation </summary>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
+        /// tuple containing the data type and array size of the relation.
+        /// </returns>
         private ParseInfo Relation() {
             // First we expect a term
             ParseInfo status = Term();
@@ -103,22 +147,34 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Expected a term", true);
                 return new(false);
             }
+            (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
 
             // Then we see how many terms we need to chain together
             StringBuilder sb = new();
             sb.Append("Parsed relation as term");
-            return RelationPrime(sb);
+            return RelationPrime(dataType, arraySize, sb);
         }
 
-        private ParseInfo RelationPrime(StringBuilder sb) {
+        /// <summary> Parses the right tail of a relation </summary>
+        /// <param name="lDataType"> The data type of the left-hand term </param>
+        /// <param name="lArraySize"> The array size of the left-hand term </param>
+        /// <param name="sb"> A StringBuilder object for building up the log message </param>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
+        /// tuple containing the data type and array size of the final relation.
+        /// </returns>
+        private ParseInfo RelationPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
             // First check if we have a comparison operator
             string symbol;
+            bool canBeString = false;
             switch (_curToken.TokenType) {
             case TokenType.EQ:
                 symbol = "==";
+                canBeString = true;
                 break;
             case TokenType.NEQ:
                 symbol = "!=";
+                canBeString = true;
                 break;
             case TokenType.GT:
                 symbol = ">";
@@ -134,7 +190,7 @@ namespace jfc {
                 break;
             default:
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
-                return new(true);
+                return new(true, (lDataType, lArraySize));
             }
             NextToken();
             sb.Append($" {symbol} term");
@@ -145,9 +201,33 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, $"Expected a term after \"{symbol}\"", true);
                 return new(false);
             }
+            (DataType rDataType, int rArraySize) = ((DataType, int)) status.Data;
+
+            // Get the resulting data type
+            if (!Symbol.TryGetCompatibleType(lDataType, rDataType, out DataType result)) {
+                _src.Report(MsgLevel.ERROR, $"\"{rDataType}\" is not castable to \"{lDataType}\"", true);
+                return new(false);
+            }
+
+            // Ensure that the array sizes are valid
+            int arraySize;
+            if (lArraySize == 0 || rArraySize == 0) {
+                arraySize = lArraySize > rArraySize ? lArraySize : rArraySize;
+            } else if (lArraySize == rArraySize) {
+                arraySize = lArraySize;
+            } else {
+                _src.Report(MsgLevel.ERROR, "Array size mismatch", true);
+                return new(false);
+            }
+
+            // Check for legal string operations
+            if (!canBeString && result == DataType.STRING) {
+                _src.Report(MsgLevel.ERROR, $"Invalid operation \"{symbol}\" on type \"{DataType.STRING}\"", true);
+                return new(false);
+            }
 
             // Now we go again
-            return RelationPrime(sb);
+            return RelationPrime(DataType.BOOL, arraySize, sb);
         }
 
         /// <summary> Parses a term </summary>
