@@ -1,0 +1,19 @@
+// This file contains a whole bunch of code that should error based on type mismatches, uncomment each section to test
+// them.
+program type_checking is
+
+variable int : integer;
+variable dec : float;
+variable flag : bool;
+variable intM : integer[2];
+variable decM : float[14];
+variable str : string;
+
+begin
+
+// int := int + 7 + FALSE;
+// decM := intM + 2 - decM;
+// str := str + 2;
+// flag := flag | int;
+
+end program .
