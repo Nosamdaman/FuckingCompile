@@ -156,8 +156,7 @@ namespace jfc {
 
             // Finally we end with a period
             if (_curToken.TokenType != TokenType.PERIOD) {
-                _src.Report(MsgLevel.ERROR, "\".\" expected after \"PROGRAM\"", true);
-                return new(false);
+                _src.Report(MsgLevel.WARN, "\".\" expected after \"PROGRAM\"", true);
             }
             NextToken();
 
