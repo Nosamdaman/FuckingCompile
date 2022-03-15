@@ -192,10 +192,16 @@ namespace jfc {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true, (lDataType, lArraySize));
             }
+
+            // Ensure the left-hand side is valid
+            if (!canBeString && lDataType == DataType.STRING) {
+                _src.Report(MsgLevel.ERROR, $"\"{symbol}\" operator not allowed for type {lDataType}", true);
+                return new(false);
+            }
+
+            // Now we expect another term
             NextToken();
             sb.Append($" {symbol} term");
-
-            // If so, we expect another term
             ParseInfo status = Term();
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, $"Expected a term after \"{symbol}\"", true);
@@ -203,9 +209,9 @@ namespace jfc {
             }
             (DataType rDataType, int rArraySize) = ((DataType, int)) status.Data;
 
-            // Get the resulting data type
-            if (!Symbol.TryGetCompatibleType(lDataType, rDataType, out DataType result)) {
-                _src.Report(MsgLevel.ERROR, $"\"{rDataType}\" is not castable to \"{lDataType}\"", true);
+            // Ensure the right-hand side is valid
+            if (!canBeString && rDataType == DataType.STRING) {
+                _src.Report(MsgLevel.ERROR, $"\"{symbol}\" operator not allowed for type {rDataType}", true);
                 return new(false);
             }
 
@@ -217,12 +223,6 @@ namespace jfc {
                 arraySize = lArraySize;
             } else {
                 _src.Report(MsgLevel.ERROR, "Array size mismatch", true);
-                return new(false);
-            }
-
-            // Check for legal string operations
-            if (!canBeString && result == DataType.STRING) {
-                _src.Report(MsgLevel.ERROR, $"Invalid operation \"{symbol}\" on type \"{DataType.STRING}\"", true);
                 return new(false);
             }
 
