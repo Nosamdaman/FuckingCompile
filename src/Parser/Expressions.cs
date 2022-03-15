@@ -261,22 +261,27 @@ namespace jfc {
         private ParseInfo TermPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
             // First check if we have a multiplication operation
             char symbol;
+            string action;
             if (_curToken.TokenType == TokenType.TIMES) {
                 symbol = '*';
+                action = "multiply";
             } else if (_curToken.TokenType == TokenType.DIVIDE) {
                 symbol = '/';
+                action = "divide";
             } else {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true, (lDataType, lArraySize));
             }
-            if (lDataType == DataType.STRING) {
-                _src.Report(MsgLevel.ERROR, $"Cannot multiply type \"{DataType.STRING}\"", true);
+
+            // Ensure the left-hand side is valid
+            if (lDataType == DataType.STRING || lDataType == DataType.BOOL) {
+                _src.Report(MsgLevel.ERROR, $"Cannot {action} type \"{lDataType}\"", true);
                 return new(false);
             }
+
+            // We expect another factor
             NextToken();
             sb.Append($" {symbol} factor");
-
-            // If so, we expect another factor
             ParseInfo status = Factor();
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, $"Expected a factor after \"{symbol}\"", true);
@@ -284,10 +289,18 @@ namespace jfc {
             }
             (DataType rDataType, int rArraySize) = ((DataType, int)) status.Data;
 
-            // Get the resulting data type
-            if (!Symbol.TryGetCompatibleType(lDataType, rDataType, out DataType result)) {
-                _src.Report(MsgLevel.ERROR, $"\"{rDataType}\" is not castable to \"{lDataType}\"", true);
+            // Ensure the right-hand side is valid
+            if (rDataType == DataType.STRING || rDataType == DataType.BOOL) {
+                _src.Report(MsgLevel.ERROR, $"Cannot {action} type \"{rDataType}\"", true);
                 return new(false);
+            }
+
+            // Get the resulting data type
+            DataType result;
+            if (lDataType == DataType.FLOAT || rDataType == DataType.FLOAT) {
+                result = DataType.FLOAT;
+            } else {
+                result = DataType.INTEGER;
             }
 
             // Ensure that the array sizes are valid
