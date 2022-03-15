@@ -222,6 +222,13 @@ namespace jfc {
                     return new(false);
                 }
 
+                // If we have a variable, parse it
+                if (symbol.SymbolType == SymbolType.VARIABLE) {
+                    
+                }
+
+                // OLD CODE
+
                 // For now we'll just assume that it could be either one, and not worry about the symbol table
                 NextToken();
 
@@ -338,6 +345,56 @@ namespace jfc {
             // Anything else is unacceptable
             _src.Report(MsgLevel.ERROR, "Expected a factor", true);
             return new(false);
+        }
+
+        /// <summary> Parses a variable reference </summary>
+        /// <param name="variable"> The whose reference is to be parsed </param>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If successful, it will describe the data-type to be
+        /// returned.
+        /// </returns>
+        private ParseInfo VariableReference(Symbol variable) {
+            // We'll assume that we're on the current variable and just move on
+            NextToken();
+
+            // Get information about the variable
+            DataType dataType = variable.DataType;
+            int arraySize = 0;
+            if (variable.IsArray) arraySize = variable.ArraySize;
+
+            // Now we'll check for indexing
+            if (_curToken.TokenType != TokenType.L_BRACKET) {
+                return new(true, (dataType, arraySize));
+            }
+
+            // We'll error if the variable isn't an array
+            if (!variable.IsArray) {
+                _src.Report(MsgLevel.ERROR, "Cannot index a non-array variable", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Now we check the bounds
+            ParseInfo status = Expression();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
+                return new(false);
+            }
+            (DataType boundDataType, int boundArraySize) = ((DataType, int)) status.Data;
+            if (boundDataType == DataType.STRING || boundArraySize != 0) {
+                _src.Report(MsgLevel.ERROR, "Bounds must be scalar values that can be converted to integers", true);
+                return new(false);
+            }
+
+            // Finally we expect a closing bracket
+            if (_curToken.TokenType != TokenType.R_BRACKET) {
+                _src.Report(MsgLevel.ERROR, "\"]\" expected after expression", true);
+                return new(false);
+            }
+            NextToken();
+
+            // We should be good to go
+            return new(true, (dataType, 0));
         }
 
         /// <summary> Parses a procedure call </summary>
