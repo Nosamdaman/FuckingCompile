@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 
 namespace jfc {
@@ -222,63 +223,23 @@ namespace jfc {
                     return new(false);
                 }
 
-                // If we have a variable, parse it
+                // Parse the symbol based on its type
+                ParseInfo status;
                 if (symbol.SymbolType == SymbolType.VARIABLE) {
-                    
-                }
-
-                // OLD CODE
-
-                // For now we'll just assume that it could be either one, and not worry about the symbol table
-                NextToken();
-
-                // If we have a procedure, then we expect expect an argument list in parens
-                if (_curToken.TokenType == TokenType.L_PAREN) {
-                    NextToken();
-
-                    // The list could be empty
-                    if (_curToken.TokenType == TokenType.R_PAREN) {
-                        NextToken();
-                        return new(true);
-                    }
-
-                    // Or it could have arguments
-                    ParseInfo status = ArgumentList();
-                    if (!status.Success) {
-                        _src.Report(MsgLevel.DEBUG, "Argument list expected after \"(\"", true);
-                        return new(false);
-                    }
-
-                    // Either way, it needs to end with a right parens
-                    if (_curToken.TokenType != TokenType.R_PAREN) {
-                        _src.Report(MsgLevel.ERROR, "\")\" expected after argument list", true);
-                        return new(false);
-                    }
-                    NextToken();
-                    _src.Report(MsgLevel.TRACE, "Parsed factor as procedure call", true);
-                    return new(true);
-                }
-
-                // If we have a name, then we might have an indexing operation
-                if (_curToken.TokenType == TokenType.L_BRACKET) {
-                    NextToken();
-                    ParseInfo status = Expression();
-                    if (!status.Success) {
-                        _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
-                        return new(false);
-                    }
-                    if (_curToken.TokenType != TokenType.R_BRACKET) {
-                        _src.Report(MsgLevel.ERROR, "\"]\" expected after expression", true);
-                        return new(false);
-                    }
-                    NextToken();
-                    _src.Report(MsgLevel.TRACE, "Parsed factor as name with indexing", true);
+                    status = VariableReference(symbol);
+                } else if (symbol.SymbolType == SymbolType.PROCEDURE) {
+                    status = ProcedureReference(symbol);
                 } else {
-                    _src.Report(MsgLevel.TRACE, "Parsed factor as name", true);
+                    throw new System.Exception("How the fuck did you even get here?");
+                }
+                if (!status.Success) {
+                    _src.Report(MsgLevel.DEBUG, $"Unable to parse reference to symbol \"{symbol.Name}\"", true);
+                    return new(false);
                 }
 
-                // Either way, we should be good here
-                return new(true);
+                // We should be good here
+                _src.Report(MsgLevel.TRACE, "Parsed factor as symbol reference");
+                return new(true, status.Data);
             }
 
             // If we have a minus symbol, then we could have either a name or a number
@@ -397,13 +358,87 @@ namespace jfc {
             return new(true, (dataType, 0));
         }
 
-        /// <summary> Parses a procedure call </summary>
+        /// <summary> Parses a procedure reference </summary>
+        /// <param name="procedure"> Reference to the procedure to be parsed </param>
         /// <returns>
         /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data parameter will be set to the
         /// DataType of the procedure.
         /// </returns>
-        private ParseInfo ProcedureCall() {
-            throw new System.NotImplementedException();
+        private ParseInfo ProcedureReference(Symbol procedure) {
+            // We'll assume that we're on the current procedure and just move on
+            NextToken();
+
+            // Now we expect a left parens
+            if (_curToken.TokenType != TokenType.L_PAREN) {
+                _src.Report(MsgLevel.ERROR, "\"(\" expected after procedure name", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Parse the arguments if there are any
+            if (procedure.Parameters.Any()) {
+                // Parse the first argument
+                ParseInfo status = ProcedureArgument(procedure.Parameters.First());
+                if (!status.Success) {
+                    Symbol argument = procedure.Parameters.First();
+                    _src.Report(MsgLevel.DEBUG, $"Failed to parse argument \"{argument.Name}\"", true);
+                    return new(false);
+                }
+
+                // Parse the remaining arguments
+                foreach (Symbol argument in procedure.Parameters.Skip(1)) {
+                    // First we expect a comma
+                    if (_curToken.TokenType != TokenType.COMMA) {
+                        _src.Report(MsgLevel.ERROR, "\",\" expected after argument", true);
+                        return new(false);
+                    }
+                    NextToken();
+
+                    // Then we expect the argument
+                    status = ProcedureArgument(argument);
+                    if (!status.Success) {
+                        _src.Report(MsgLevel.DEBUG, $"Failed to parse argument \"{argument.Name}\"", true);
+                        return new(false);
+                    }
+                }
+            }
+
+            // Finally we expect the closing parens
+            if (_curToken.TokenType != TokenType.R_PAREN) {
+                _src.Report(MsgLevel.ERROR, "\")\" expected after argument list", true);
+                return new(false);
+            }
+            NextToken();
+
+            // We should be good to go
+            return new(true, (procedure.DataType, 0));
+        }
+
+        /// <summary> Parses a single argument in a procedure call </summary>
+        /// <param name="symbol"> The expected type of the argument </param>
+        /// <returns> A ParseInfo describing the success of the parse </returns>
+        private ParseInfo ProcedureArgument(Symbol symbol) {
+            // First parse the expression for the argument
+            ParseInfo status = Expression();
+            if (!status.Success) { return new(false); }
+
+            // Then compare the types
+            (DataType actualDataType, int actualArraySize) = ((DataType, int)) status.Data;
+            int expectedArraySize = 0;
+            if (symbol.IsArray) { expectedArraySize = symbol.ArraySize; }
+            if (!Symbol.TryGetCompatibleType(symbol.DataType, actualDataType, out DataType _)) {
+                _src.Report(MsgLevel.ERROR, $"Type \"{actualDataType}\" is not castable to \"{symbol.DataType}", true);
+                return new(false);
+            }
+
+            // Finally compare the array sizes
+            if (expectedArraySize != actualArraySize) {
+                _src.Report(MsgLevel.ERROR, "Array size mismatch", true);
+                return new(false);
+            }
+
+            // We should be good to go
+            return new(true);
         }
     }
 }
