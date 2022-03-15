@@ -381,17 +381,16 @@ namespace jfc {
                         return new(false);
                     }
 
-                    // The minus sign is an implicit converter, so we need to get our types straight
+                    // We need an integer or a float
                     (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
-                    if (dataType == DataType.STRING) {
-                        _src.Report(MsgLevel.ERROR, $"Type \"{DataType.STRING}\" cannot be inverted", true);
+                    if (dataType != DataType.INTEGER || dataType != DataType.FLOAT) {
+                        _src.Report(MsgLevel.ERROR, $"Type \"{dataType}\" cannot be inverted", true);
                         return new(false);
                     }
-                    Symbol.TryGetCompatibleType(DataType.INTEGER, dataType, out DataType result);
 
                     // We should be good to go
                     _src.Report(MsgLevel.TRACE, $"Parsed factor as minus \"{symbol.Name}\"", true);
-                    return new(true, (result, arraySize));
+                    return new(true, (dataType, arraySize));
                 }
 
                 // Otherwise, it should be a number
@@ -481,8 +480,8 @@ namespace jfc {
                 return new(false);
             }
             (DataType boundDataType, int boundArraySize) = ((DataType, int)) status.Data;
-            if (boundDataType == DataType.STRING || boundArraySize != 0) {
-                _src.Report(MsgLevel.ERROR, "Bounds must be scalar values that can be converted to integers", true);
+            if (boundDataType != DataType.INTEGER || boundArraySize != 0) {
+                _src.Report(MsgLevel.ERROR, "Bounds must be scalar integers", true);
                 return new(false);
             }
 
@@ -565,8 +564,8 @@ namespace jfc {
             (DataType actualDataType, int actualArraySize) = ((DataType, int)) status.Data;
             int expectedArraySize = 0;
             if (symbol.IsArray) { expectedArraySize = symbol.ArraySize; }
-            if (!Symbol.TryGetCompatibleType(symbol.DataType, actualDataType, out DataType _)) {
-                _src.Report(MsgLevel.ERROR, $"\"{actualDataType}\" is not castable to \"{symbol.DataType}\"", true);
+            if (symbol.DataType != actualDataType) {
+                _src.Report(MsgLevel.ERROR, $"Type mismatch of \"{actualDataType}\" and \"{symbol.DataType}\"", true);
                 return new(false);
             }
 
