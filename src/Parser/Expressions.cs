@@ -89,18 +89,27 @@ namespace jfc {
         private ParseInfo ArithOpPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
             // First check if we have an arithmatic operator
             char symbol;
+            string action;
             if (_curToken.TokenType == TokenType.PLUS) {
                 symbol = '+';
+                action = "add";
             } else if (_curToken.TokenType == TokenType.MINUS) {
                 symbol = '-';
+                action = "subtract";
             } else {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true, (lDataType, lArraySize));
             }
-            NextToken();
-            sb.Append($" {symbol} relation");
+
+            // Ensure the left-hand side is valid
+            if (lDataType == DataType.STRING || lDataType == DataType.BOOL) {
+                _src.Report(MsgLevel.ERROR, $"Cannot {action} type \"{lDataType}\"", true);
+                return new(false);
+            }
 
             // Then we expect another relation
+            NextToken();
+            sb.Append($" {symbol} relation");
             ParseInfo status = Relation();
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, $"Expected a relation after \"{symbol}\"", true);
@@ -108,16 +117,18 @@ namespace jfc {
             }
             (DataType rDataType, int rArraySize) = ((DataType, int)) status.Data;
 
-            // Get the resulting data type
-            if (!Symbol.TryGetCompatibleType(lDataType, rDataType, out DataType result)) {
-                _src.Report(MsgLevel.ERROR, $"\"{rDataType}\" is not castable to \"{lDataType}\"", true);
+            // Ensure the right-hand side is valid
+            if (rDataType == DataType.STRING || rDataType == DataType.BOOL) {
+                _src.Report(MsgLevel.ERROR, $"Cannot {action} type \"{rDataType}\"", true);
                 return new(false);
             }
 
-            // Ensure we're not subtracting strings
-            if (symbol == '-' && rDataType == DataType.STRING) {
-                _src.Report(MsgLevel.ERROR, $"Invalid operator \"-\" on type \"{DataType.STRING}\"", true);
-                return new(false);
+            // Get the resulting data type
+            DataType result;
+            if (lDataType == DataType.FLOAT || rDataType == DataType.FLOAT) {
+                result = DataType.FLOAT;
+            } else {
+                result = DataType.INTEGER;
             }
 
             // Ensure that the array sizes are valid
