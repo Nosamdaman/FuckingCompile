@@ -134,32 +134,5 @@ namespace jfc {
         public static bool operator ==(Symbol lhs, Symbol rhs) => lhs.Equals(rhs);
 
         public static bool operator !=(Symbol lhs, Symbol rhs) => !lhs.Equals(rhs);
-
-        /// <summary> Attempts to get the compatible type between two datatypes </summary>
-        /// <param name="d0"> The first datatype to be compared </param>
-        /// <param name="d1"> The second datatype to be compared </param>
-        /// <param name="result"> The compatible type between the two that preserves the most information </param>
-        /// <returns> Whether or not a compatible type exists </returns>
-        public static bool TryGetCompatibleType(DataType d0, DataType d1, out DataType result) {
-            // If they're both the same, then we're good
-            if (d0 == d1) {
-                result = d0;
-                return true;
-            }
-
-            // If either one is a string, they aren't compatible
-            if (d0 == DataType.STRING || d1 == DataType.STRING) {
-                result = 0;
-                return false;
-            }
-
-            // Otherwise return the larger of the two
-            if (d0 > d1) {
-                result = d0;
-            } else {
-                result = d1;
-            }
-            return true;
-        }
     }
 }
