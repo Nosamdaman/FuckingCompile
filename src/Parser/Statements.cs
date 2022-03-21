@@ -29,25 +29,23 @@ namespace jfc {
                 _src.Report(MsgLevel.ERROR, "Expected an identifier as a destination", true);
                 return new(false);
             }
-            NextToken();
 
-            // If we have a name, then we might have an indexing operation
-            if (_curToken.TokenType == TokenType.L_BRACKET) {
-                NextToken();
-                status = Expression();
-                if (!status.Success) {
-                    _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
-                    return new(false);
-                }
-                if (_curToken.TokenType != TokenType.R_BRACKET) {
-                    _src.Report(MsgLevel.ERROR, "\"]\" expected after expression", true);
-                    return new(false);
-                }
-                NextToken();
-                _src.Report(MsgLevel.TRACE, "Parsed destination as name with indexing", true);
-            } else {
-                _src.Report(MsgLevel.TRACE, "Parsed destination as name", true);
+            // Then, we need to verify that the identifier exists and refers to a variable
+            string id = (string) _curToken.TokenMark;
+            if (!TryGetSymbol(id, out Symbol symbol)) {
+                _src.Report(MsgLevel.ERROR, $"Reference to unkown symbol \"{id}\"", true);
+                return new(false);
             }
+            if (symbol.SymbolType != SymbolType.VARIABLE) {
+                _src.Report(MsgLevel.ERROR, "Assignment statements must begin with a variable reference", true);
+                return new(false);
+            }
+            status = VariableReference(symbol);
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expected a valid variable reference", true);
+                return new(false);
+            }
+            (DataType eDataType, int eArraySize) = ((DataType, int)) status.Data;
 
             // Next we need an assignment sign
             if (_curToken.TokenType != TokenType.ASSIGN) {
@@ -60,6 +58,22 @@ namespace jfc {
             status = Expression();
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected an expression after \":=\"", true);
+                return new(false);
+            }
+
+            // Now we need to verify type compatibility
+            (DataType aDataType, int aArraySize) = ((DataType, int)) status.Data;
+            if (eDataType != aDataType && (
+                (eDataType == DataType.BOOL && aDataType != DataType.INTEGER) ||
+                (eDataType == DataType.INTEGER && (aDataType != DataType.BOOL || aDataType != DataType.FLOAT)) ||
+                (eDataType == DataType.FLOAT && aDataType != DataType.INTEGER) ||
+                eDataType == DataType.STRING
+            )) {
+                _src.Report(MsgLevel.ERROR, $"Type mismatch between \"{eDataType}\" and \"{aDataType}\"", true);
+                return new(false);
+            }
+            if (eArraySize != aArraySize) {
+                _src.Report(MsgLevel.ERROR, $"Array size mismatch between \"{eArraySize}\" and \"{aArraySize}\"", true);
                 return new(false);
             }
 
@@ -86,6 +100,11 @@ namespace jfc {
             ParseInfo status = Expression();
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected an expression after \"(\"", true);
+                return new(false);
+            }
+            (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
+            if ((dataType != DataType.BOOL && dataType != DataType.INTEGER) || arraySize != 0) {
+                _src.Report(MsgLevel.ERROR, "Conditional expression must evaluate to a singular boolean", true);
                 return new(false);
             }
             if (_curToken.TokenType != TokenType.R_PAREN) {
@@ -163,6 +182,11 @@ namespace jfc {
             }
             NextToken();
             status = Expression();
+            (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
+            if ((dataType != DataType.BOOL && dataType != DataType.INTEGER) || arraySize != 0) {
+                _src.Report(MsgLevel.ERROR, "Conditional expression must evaluate to a singular boolean", true);
+                return new(false);
+            }
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected an expression after \";\"", true);
                 return new(false);
