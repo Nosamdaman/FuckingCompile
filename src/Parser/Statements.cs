@@ -2,17 +2,25 @@ namespace jfc {
     /// <summary> Parses the program </summary>
     public partial class Parser {
         /// <summary> Parses a statement </summary>
+        /// <param name="returnType">
+        /// The expected return type of this block. If set to null, no return statements are allowed, as we are in the
+        /// global scope.
+        /// </param>
         /// <returns> A ParseInfo with no special data </returns>
-        private ParseInfo Statement() {
+        private ParseInfo Statement(DataType? returnType) {
             switch (_curToken.TokenType) {
             case TokenType.IDENTIFIER:
                 return AssignmentStatement();
             case TokenType.IF_RW:
-                return IfStatement();
+                return IfStatement(returnType);
             case TokenType.FOR_RW:
-                return LoopStatement();
+                return LoopStatement(returnType);
             case TokenType.RETURN_RW:
-                return ReturnStatement();
+                if (returnType is null) {
+                    _src.Report(MsgLevel.ERROR, "Return statements now allowed in the global scope", true);
+                    return new(false);
+                }
+                return ReturnStatement((DataType) returnType);
             default:
                 _src.Report(MsgLevel.ERROR, "Expected a statement", true);
                 return new(false);
@@ -65,7 +73,7 @@ namespace jfc {
             (DataType aDataType, int aArraySize) = ((DataType, int)) status.Data;
             if (eDataType != aDataType && (
                 (eDataType == DataType.BOOL && aDataType != DataType.INTEGER) ||
-                (eDataType == DataType.INTEGER && (aDataType != DataType.BOOL || aDataType != DataType.FLOAT)) ||
+                (eDataType == DataType.INTEGER && aDataType != DataType.BOOL && aDataType != DataType.FLOAT) ||
                 (eDataType == DataType.FLOAT && aDataType != DataType.INTEGER) ||
                 eDataType == DataType.STRING
             )) {
@@ -82,8 +90,12 @@ namespace jfc {
         }
 
         /// <summary> Parses an if statement </summary>
+        /// <param name="returnType">
+        /// The expected return type of this block. If set to null, no return statements are allowed, as we are in the
+        /// global scope.
+        /// </param>
         /// <returns> A ParseInfo with no special data </returns>
-        private ParseInfo IfStatement() {
+        private ParseInfo IfStatement(DataType? returnType) {
             // First we need the if keyword
             if (_curToken.TokenType != TokenType.IF_RW) {
                 _src.Report(MsgLevel.ERROR, "Expected an \"IF\"", true);
@@ -121,7 +133,7 @@ namespace jfc {
             NextToken();
 
             // Next we'll read statements until we reach the else or end
-            status = StatementList(new[] { TokenType.ELSE_RW, TokenType.END_RW, TokenType.EOF });
+            status = StatementList(new[] { TokenType.ELSE_RW, TokenType.END_RW, TokenType.EOF }, returnType);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected statement list after \"THEN\"", true);
                 return new(false);
@@ -131,7 +143,7 @@ namespace jfc {
             if (_curToken.TokenType == TokenType.ELSE_RW) {
                 // Next we'll read statements until we reach the end
                 NextToken();
-                status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
+                status = StatementList(new[] { TokenType.END_RW, TokenType.EOF }, returnType);
                 if (!status.Success) {
                     _src.Report(MsgLevel.DEBUG, "Expected statement list after \"ELSE\"", true);
                     return new(false);
@@ -156,8 +168,12 @@ namespace jfc {
         }
 
         /// <summary> Parses a loop statement </summary>
+        /// <param name="returnType">
+        /// The expected return type of this block. If set to null, no return statements are allowed, as we are in the
+        /// global scope.
+        /// </param>
         /// <returns> A ParseInfo with no special data </returns>
-        private ParseInfo LoopStatement() {
+        private ParseInfo LoopStatement(DataType? returnType) {
             // First we expect the "for" keyword
             if (_curToken.TokenType != TokenType.FOR_RW) {
                 _src.Report(MsgLevel.ERROR, "Expected \"FOR\" at the start of a loop", true);
@@ -198,7 +214,7 @@ namespace jfc {
             NextToken();
 
             // Now we accept statements until the end
-            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
+            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF }, returnType);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected a statement list after \")\"", true);
                 return new(false);
@@ -222,8 +238,9 @@ namespace jfc {
         }
 
         /// <summary> Parses a return statement </summary>
+        /// <param name="returnType"> The expected return type of this statement </param>
         /// <returns> A ParseInfo with no special data </returns>
-        private ParseInfo ReturnStatement() {
+        private ParseInfo ReturnStatement(DataType returnType) {
             // First we expect the return keyword
             if (_curToken.TokenType != TokenType.RETURN_RW) {
                 _src.Report(MsgLevel.ERROR, "Expected \"RETURN\"", true);
@@ -235,6 +252,20 @@ namespace jfc {
             ParseInfo status = Expression();
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected expression after \"RETURN\"", true);
+                return new(false);
+            }
+            (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
+            if (returnType != dataType && (
+                (returnType == DataType.BOOL && dataType != DataType.INTEGER) ||
+                (returnType == DataType.INTEGER && dataType != DataType.BOOL && dataType != DataType.FLOAT) ||
+                (returnType == DataType.FLOAT && dataType != DataType.INTEGER) ||
+                returnType == DataType.STRING
+            )) {
+                _src.Report(MsgLevel.ERROR, $"Type mismatch between \"{returnType}\" and \"{dataType}\"", true);
+                return new(false);
+            }
+            if (arraySize != 0) {
+                _src.Report(MsgLevel.ERROR, "Cannot return an array", true);
                 return new(false);
             }
 

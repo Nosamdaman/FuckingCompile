@@ -49,7 +49,7 @@ namespace jfc {
             }
 
             // Then we expect a procedure body
-            status = ProcedureBody();
+            status = ProcedureBody(proc.DataType);
             PopScope();
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Procedure header expected after procedure header", true);
@@ -142,8 +142,9 @@ namespace jfc {
         }
 
         /// <summary> Parses a procedure body </summary>
+        /// <param name="returnType"> The return type of the procedure </param>
         /// <returns> A ParseInfo with no special data </returns>
-        private ParseInfo ProcedureBody() {
+        private ParseInfo ProcedureBody(DataType returnType) {
             // First we expect a declaration list
             ParseInfo status = DeclarationList(new[] { TokenType.BEGIN_RW, TokenType.EOF });
             if (!status.Success) {
@@ -159,7 +160,7 @@ namespace jfc {
             NextToken();
 
             // Then we need a statement list
-            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
+            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF }, returnType);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Statement list expected after \"BEGIN\"", true);
                 return new(false);

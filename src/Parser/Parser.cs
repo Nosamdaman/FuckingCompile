@@ -138,7 +138,7 @@ namespace jfc {
                 return new(false);
             }
             NextToken();
-            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF });
+            status = StatementList(new[] { TokenType.END_RW, TokenType.EOF }, null);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Statement list expected after \"BEGIN\"", true);
                 return new(false);
@@ -237,11 +237,15 @@ namespace jfc {
         /// An array of tokens which should signal the end of the statement list. If any token in this list is seen at
         /// what could be the start of a new statement, execution will end.
         /// </param>
+        /// <param name="returnType">
+        /// The expected return type of this block. If set to null, no return statements are allowed, as we are in the
+        /// global scope.
+        /// </param>
         /// <returns> A ParseInfo with no special data </returns>
-        private ParseInfo StatementList(TokenType[] exitTokens) {
+        private ParseInfo StatementList(TokenType[] exitTokens, DataType? returnType) {
             // Loop to look for statements
             while (!exitTokens.Contains(_curToken.TokenType)) {
-                ParseInfo status = Statement();
+                ParseInfo status = Statement(returnType);
                 if (!status.Success) {
                     _src.Report(MsgLevel.DEBUG, "Expected a statement", true);
                     return new(false);
