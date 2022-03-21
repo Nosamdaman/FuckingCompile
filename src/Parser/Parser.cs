@@ -30,6 +30,7 @@ namespace jfc {
         private Token _curToken = null;
         private readonly Dictionary<string, Symbol> _global = new(new StringNoCaseComparer());
         private readonly Stack<Dictionary<string, Symbol>> _local = new();
+        private readonly Translator _translator = new();
 
         /// <summary> Creates a new parser on the given file </summary>
         /// <param name="src"> The  source code </param>
@@ -70,6 +71,9 @@ namespace jfc {
             _global.Add("putString", putString);
             _global.Add("sqrt", sqrt);
         }
+
+        /// <summary> Returns the final code </summary>
+        public string Finish() => _translator.Finish();
 
         /// <summary> Adds a new local scope to the local symbol table </summary>
         private void PushScope() {

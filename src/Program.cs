@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace jfc {
     /// <summary> The main entry-point class for the application </summary>
@@ -142,6 +143,9 @@ namespace jfc {
             // Test code, we'll run the parser
             Parser parser = new(src);
             ParseInfo status = parser.Program();
+            File.WriteAllText(outputFile, parser.Finish());
+
+            // Finish up
             if (!status.Success) {
                 src.Report(MsgLevel.ERROR, "Unable to successfully parse the program, aborting execution");
                 Environment.ExitCode = 1;

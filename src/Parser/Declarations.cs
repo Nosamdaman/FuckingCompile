@@ -234,6 +234,7 @@ namespace jfc {
                     _local.Peek().Add(variable.Name, variable);
                 }
                 _src.Report(MsgLevel.DEBUG, $"Variable \"{variable.Name}\" declared as \"{dataType}\"", true);
+                _translator.InitializeVariable(variable, isGlobal);
                 return new(true);
             } else if (dataType == DataType.STRING) {
                 _src.Report(MsgLevel.DEBUG, $"Strings cannot be arrays", true);
@@ -264,6 +265,7 @@ namespace jfc {
                 _local.Peek().Add(variable.Name, variable);
             }
             _src.Report(MsgLevel.DEBUG, $"Variable \"{variable.Name}\" declared as \"{dataType}\"", true);
+            _translator.InitializeVariable(variable, isGlobal);
             return new(true);
         }
 
