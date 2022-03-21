@@ -12,8 +12,8 @@ namespace jfc {
         FLOAT = 3
     }
 
-    /// <summary> Structure representing a symbol </summary>
-    public readonly struct Symbol : IEquatable<Symbol> {
+    /// <summary> Class representing a symbol </summary>
+    public class Symbol {
         private readonly string _name;
         private readonly SymbolType _symbolType;
         private readonly DataType _dataType;
@@ -62,6 +62,9 @@ namespace jfc {
                 return (Symbol[]) _parameters.Clone();
             }
         }
+
+        /// <summary> The LLVM IR variable name for the symbol </summary>
+        public string IrVariable { get; set; } = null;
 
         private Symbol(string name,
                        SymbolType symbolType,
@@ -117,22 +120,6 @@ namespace jfc {
             return new(name, SymbolType.PROCEDURE, dataType, false, 0, parameters);
         }
 
-        public bool Equals(Symbol other) {
-            return string.Equals(Name, other.Name, StringComparison.CurrentCultureIgnoreCase);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is Symbol other) {
-                return Equals(other);
-            }
-            return false;
-        }
-
         public override int GetHashCode() => Name.GetHashCode();
-
-        public static bool operator ==(Symbol lhs, Symbol rhs) => lhs.Equals(rhs);
-
-        public static bool operator !=(Symbol lhs, Symbol rhs) => !lhs.Equals(rhs);
     }
 }
