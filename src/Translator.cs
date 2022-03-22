@@ -81,7 +81,7 @@ namespace jfc {
         /// <summary> Returns the final LLVM IR as a string </summary>
         public string Finish() {
             _sb.AppendLine("ret i32 0");
-            _sb.AppendLine("}\n");
+            _sb.AppendLine("}");
             return _sb.ToString();
         }
     }
