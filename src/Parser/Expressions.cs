@@ -4,6 +4,11 @@ using System.Text;
 namespace jfc {
     /// <summary> Parses the program </summary>
     public partial class Parser {
+        /// <summary> Parses an expression </summary>
+        /// <returns>
+        /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
+        /// tuple containing the data type and array size of the final expression.
+        /// </returns>
         private ParseInfo Expression() {
             // First check for a "not"
             StringBuilder sb = new();
