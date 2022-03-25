@@ -143,7 +143,6 @@ namespace jfc {
             // Test code, we'll run the parser
             Parser parser = new(src);
             ParseInfo status = parser.Program();
-            File.WriteAllText(outputFile, parser.Finish());
 
             // Finish up
             if (!status.Success) {
