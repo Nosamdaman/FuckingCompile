@@ -25,7 +25,7 @@ namespace jfc {
         static void Main(string[] args) {
             // Initialize parameters
             string sourceFile = null;
-            string outputFile = "a.out";
+            string outputFile = "a.ll";
             MsgLevel verbosity = MsgLevel.INFO;
 
             // We'll parse most of the inputs in a loop here
@@ -151,6 +151,10 @@ namespace jfc {
                 src.Dispose();
                 return;
             }
+
+            // Now we write the result
+            string output = (string) status.Data;
+            File.WriteAllText(outputFile, output);
 
             // Close the file
             src.Dispose();

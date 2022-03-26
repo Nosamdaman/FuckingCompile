@@ -30,6 +30,7 @@ namespace jfc {
         private Token _curToken = null;
         private readonly Dictionary<string, Symbol> _global = new(new StringNoCaseComparer());
         private readonly Stack<Dictionary<string, Symbol>> _local = new();
+        private readonly Translator _translator = new();
 
         /// <summary> Creates a new parser on the given file </summary>
         /// <param name="src"> The  source code </param>
@@ -106,7 +107,7 @@ namespace jfc {
         }
 
         /// <summary> Parses the top-level program of a program </summary>
-        /// <returns> A ParseInfo with no special data </returns>
+        /// <returns> A ParseInfo with the final translation </returns>
         public ParseInfo Program() {
             // First we need the program header
             if (_curToken.TokenType != TokenType.PROGRAM_RW) {
@@ -165,7 +166,7 @@ namespace jfc {
                 _src.Report(MsgLevel.WARN, "Skipping anything past here", true);
             }
             _src.Report(MsgLevel.INFO, $"Finished parsing program \"{programName}\"");
-            return new(true);
+            return new(true, _translator.Finish());
         }
 
         /// <summary> Parses a list of declarations </summary>

@@ -48,6 +48,9 @@ namespace jfc {
                 _local.Peek().Add(parameter.Name, parameter);
             }
 
+            // Now we'll begin by writing the opening part of the procedure
+            _translator.StartProcedure(proc);
+
             // Then we expect a procedure body
             status = ProcedureBody(proc.DataType);
             PopScope();
@@ -55,6 +58,9 @@ namespace jfc {
                 _src.Report(MsgLevel.DEBUG, "Procedure header expected after procedure header", true);
                 return new(false);
             }
+
+            // We can now finish the procedure
+            _translator.FinishProcedure();
 
             // We should be good to go
             _src.Report(MsgLevel.INFO, $"Procedure \"{proc.Name}\" of type \"{proc.DataType}\" parsed");
