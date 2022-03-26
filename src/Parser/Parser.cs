@@ -205,7 +205,7 @@ namespace jfc {
             PushScope();
 
             // First we expect a parameter
-            ParseInfo status = VariableDeclaration(false);
+            ParseInfo status = VariableDeclaration(false, false);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Variable declaration expected at the start of a parameter list", true);
                 PopScope();
@@ -216,7 +216,7 @@ namespace jfc {
             // Then we loop until we don't see a comma
             while (_curToken.TokenType == TokenType.COMMA) {
                 NextToken();
-                status = VariableDeclaration(false);
+                status = VariableDeclaration(false, false);
                 if (!status.Success) {
                     _src.Report(MsgLevel.DEBUG, "Variable declaration expected after \",\"", true);
                     PopScope();

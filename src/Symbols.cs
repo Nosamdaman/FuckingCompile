@@ -63,8 +63,8 @@ namespace jfc {
             }
         }
 
-        /// <summary> The LLVM IR variable name for the symbol </summary>
-        public string IrVariable { get; set; } = null;
+        /// <summary> The assembly name for the symbol </summary>
+        public string AssemblyName { get; set; } = null;
 
         private Symbol(string name,
                        SymbolType symbolType,

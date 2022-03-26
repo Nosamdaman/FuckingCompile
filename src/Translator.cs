@@ -4,6 +4,8 @@ using System.Text;
 namespace jfc {
     /// <summary> Class responsible for translating the source code to LLVM IR </summary>
     public class Translator {
+        private int _globalCount = 0;
+        private int _localCount = 0;
         private int _procedureCount = 0;
         private readonly StringBuilder _globals = new();
         private readonly StringBuilder _mainHeader = new();
@@ -18,7 +20,7 @@ namespace jfc {
             _globals.AppendLine("target triple = \"x86_64-pc-linux-gnu\"\n");
             _globals.AppendLine("; Global Variable Declarations");
             _mainHeader.AppendLine("; Main Enty-Point Function");
-            _mainHeader.AppendLine("declare i32 @main() {");
+            _mainHeader.AppendLine("define i32 @main() {");
         }
 
         /// <summary> Finishes building the output </summary>
@@ -36,6 +38,22 @@ namespace jfc {
             return sb.ToString();
         }
 
+        /// <summary> Declares a new variable </summary>
+        /// <param name="variable"> The variable to be declared </param>
+        /// <param name="isGlobal"> Whether or not the variable is in the global scope </param>
+        public void DeclareVariable(Symbol variable, bool isGlobal) {
+            if (isGlobal) {
+                variable.AssemblyName = GetNextGlobal() + variable.Name;
+                _globals.AppendLine($"{variable.AssemblyName} = private global {GetDefaultValue(variable)}");
+            } else {
+                variable.AssemblyName = GetNextLocal() + variable.Name;
+                StringBuilder sb = _procedures.Peek();
+                string dt = GetDataType(variable);
+                sb.AppendLine($"\t{variable.AssemblyName} = alloca {dt}");
+                sb.AppendLine($"\tstore {GetDefaultValue(variable)}, {dt}* {variable.AssemblyName}\n");
+            }
+        }
+
         /// <summary> Starts the translation of a procedure </summary>
         /// <param name="procedure"> The procedure to be translated </param>
         public void StartProcedure(Symbol procedure) {
@@ -44,12 +62,12 @@ namespace jfc {
             _procedures.Push(sb);
 
             // Set the procedure name
-            procedure.IrVariable = GetNextProcedure() + procedure.Name;
+            procedure.AssemblyName = GetNextProcedure() + procedure.Name;
 
             // Now we'll start to build up the first line
-            sb.Append("declare ");
+            sb.Append("define ");
             sb.Append(GetDataType(procedure));
-            sb.Append(" " + procedure.IrVariable + "(");
+            sb.Append(" " + procedure.AssemblyName + "(");
 
             // Now add the arguments if there are any
             if (procedure.Parameters.Length > 0) {
@@ -66,23 +84,76 @@ namespace jfc {
             // Now we need to convert our arguments to memory locations
             for (int idx = 0; idx < procedure.Parameters.Length; idx++) {
                 Symbol arg = procedure.Parameters[idx];
-                arg.IrVariable = $"%a{idx}-{arg.Name}";
+                arg.AssemblyName = $"%a{idx}-{arg.Name}";
                 string dt = GetDataType(arg);
-                sb.AppendLine($"\t{arg.IrVariable} = alloca {dt}");
-                sb.AppendLine($"\tstore {dt} %arg{idx}, {dt}* {arg.IrVariable}\n");
+                sb.AppendLine($"\t{arg.AssemblyName} = alloca {dt}");
+                sb.AppendLine($"\tstore {dt} %arg{idx}, {dt}* {arg.AssemblyName}\n");
             }
         }
 
         /// <summary> Finishes building the current procedure </summary>
-        public void FinishProcedure() {
+        /// <param name="procedure"> The procedure to be translated </param>
+        public void FinishProcedure(Symbol procedure) {
             StringBuilder sb = _procedures.Pop();
-            sb.AppendLine("\tTODO: DEFAULT RETURN");
+            sb.AppendLine($"\tret {GetDefaultValue(procedure)}");
             sb.AppendLine("}");
             _finishedProcedures.AppendLine(sb.ToString());
         }
 
+        /// <summary> Gets the default value for a symbol </summary>
+        /// <param name="symbol"> The symbol whose default value is to be retrieved </param>
+        /// <returns> The default value for the symbol </returns>
+        private static string GetDefaultValue(Symbol symbol) {
+            // Get the data type and array size of the symbol
+            DataType dt = symbol.DataType;
+            int arraySize = 0;
+            if (symbol.SymbolType == SymbolType.VARIABLE && symbol.IsArray) {
+                arraySize = symbol.ArraySize;
+            }
+
+            // Get the base default value
+            string baseVal = GetDataType(dt, 0) + " " + dt switch {
+                DataType.BOOL => "true",
+                DataType.INTEGER => "0",
+                DataType.FLOAT => "0.0",
+                DataType.STRING => "TODO: STRING DEFAULT",
+                _ => throw new System.Exception("How the fuck did you even get here?")
+            };
+
+            // If we don't have an array, then we're good to go
+            if (arraySize == 0) return baseVal;
+
+            // Otherwise we'll build the array
+            StringBuilder sb = new();
+            sb.Append(GetDataType(symbol) + " [ ");
+            sb.Append(baseVal);
+            arraySize--;
+            while (arraySize > 0) {
+                sb.Append(", " + baseVal);
+                arraySize--;
+            }
+            sb.Append(" ]");
+            return sb.ToString();
+        }
+
+        /// <summary> Gets a prefix for the name of a new global variable </summary>
+        /// <returns> The prefix for the name of a new global variable</returns>
+        private string GetNextGlobal() {
+            string prefix = $"@g{_globalCount}-";
+            _globalCount++;
+            return prefix;
+        }
+
+        /// <summary> Gets a prefix for the name of a new local variable </summary>
+        /// <returns> The prefix for the name of a new local variable </returns>
+        private string GetNextLocal() {
+            string prefix = $"%l{_localCount}-";
+            _localCount++;
+            return prefix;
+        }
+
         /// <summary> Gets a prefix for the name of a new procedure </summary>
-        /// <returns> The prefix for the name of a new procedure </summary>
+        /// <returns> The prefix for the name of a new procedure </returns>
         private string GetNextProcedure() {
             string prefix = $"@p{_procedureCount}-";
             _procedureCount++;
@@ -107,7 +178,7 @@ namespace jfc {
         private static string GetDataType(DataType dataType, int arraySize) {
             // First convert the data type
             string dt = dataType switch {
-                DataType.BOOL => "i8",
+                DataType.BOOL => "i1",
                 DataType.INTEGER => "i32",
                 DataType.FLOAT => "float",
                 DataType.STRING => "TODO",

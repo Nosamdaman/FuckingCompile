@@ -60,7 +60,7 @@ namespace jfc {
             }
 
             // We can now finish the procedure
-            _translator.FinishProcedure();
+            _translator.FinishProcedure(proc);
 
             // We should be good to go
             _src.Report(MsgLevel.INFO, $"Procedure \"{proc.Name}\" of type \"{proc.DataType}\" parsed");
@@ -191,8 +191,9 @@ namespace jfc {
 
         /// <summary> Parses a variable declaration and adds it to the appropriate symbol table </summary>
         /// <param name="isGlobal"> Whether or not the variable is in the global scope </param>
+        /// <param name="translate"> Whether or not to translate the declaration in assembly </param>
         /// <returns> A ParseInfo with no special data </returns>
-        private ParseInfo VariableDeclaration(bool isGlobal) {
+        private ParseInfo VariableDeclaration(bool isGlobal, bool translate=true) {
             // First we expect the variable keyword
             if (_curToken.TokenType != TokenType.VARIABLE_RW) {
                 _src.Report(MsgLevel.ERROR, "\"VARIABLE\" expected at the start of a declaration", true);
@@ -240,6 +241,7 @@ namespace jfc {
                     _local.Peek().Add(variable.Name, variable);
                 }
                 _src.Report(MsgLevel.DEBUG, $"Variable \"{variable.Name}\" declared as \"{dataType}\"", true);
+                if (translate) _translator.DeclareVariable(variable, isGlobal);
                 return new(true);
             } else if (dataType == DataType.STRING) {
                 _src.Report(MsgLevel.DEBUG, $"Strings cannot be arrays", true);
@@ -270,6 +272,7 @@ namespace jfc {
                 _local.Peek().Add(variable.Name, variable);
             }
             _src.Report(MsgLevel.DEBUG, $"Variable \"{variable.Name}\" declared as \"{dataType}\"", true);
+            if (translate) _translator.DeclareVariable(variable, isGlobal);
             return new(true);
         }
 
