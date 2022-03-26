@@ -43,24 +43,33 @@ namespace jfc {
 
             // Seed the global symbol table with reserved procedures
             Symbol getBool = Symbol.Procedure("GETBOOL", DataType.BOOL, null);
+            getBool.AssemblyName = "@getBool";
             Symbol getInteger = Symbol.Procedure("GETINTEGER", DataType.INTEGER, null);
+            getInteger.AssemblyName = "@getInteger";
             Symbol getFloat = Symbol.Procedure("GETFLOAT", DataType.FLOAT, null);
+            getFloat.AssemblyName = "@getFloat";
             Symbol getString = Symbol.Procedure("GETSTRING", DataType.STRING, null);
+            getString.AssemblyName = "@getString";
             Symbol putBool = Symbol.Procedure("PUTBOOL", DataType.BOOL, new[] {
                 Symbol.Variable("VALUE", DataType.BOOL)
             });
+            putBool.AssemblyName = "@putBool";
             Symbol putInteger = Symbol.Procedure("PUTINTEGER", DataType.BOOL, new[] {
                 Symbol.Variable("VALUE", DataType.INTEGER)
             });
+            putInteger.AssemblyName = "@putInteger";
             Symbol putFloat = Symbol.Procedure("PUTFLOAT", DataType.BOOL, new[] {
                 Symbol.Variable("VALUE", DataType.FLOAT)
             });
+            putFloat.AssemblyName = "@putFloat";
             Symbol putString = Symbol.Procedure("PUTSTRING", DataType.BOOL, new[] {
                 Symbol.Variable("VALUE", DataType.STRING)
             });
+            putString.AssemblyName = "@putString";
             Symbol sqrt = Symbol.Procedure("SQRT", DataType.FLOAT, new[] {
                 Symbol.Variable("VALUE", DataType.INTEGER)
             });
+            sqrt.AssemblyName = "@sqrt";
             _global.Add("getBool", getBool);
             _global.Add("getInteger", getInteger);
             _global.Add("getFloat", getFloat);
