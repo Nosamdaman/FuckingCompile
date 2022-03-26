@@ -477,13 +477,12 @@ namespace jfc {
 
                 // Otherwise, it should be a number
                 DataType d;
-                if (_curToken.TokenType == TokenType.INTEGER ||
-                    _curToken.TokenType == TokenType.TRUE_RW ||
-                    _curToken.TokenType == TokenType.FALSE_RW
-                ) {
+                if (_curToken.TokenType == TokenType.INTEGER) {
                     d = DataType.INTEGER;
+                    tmp = Translator.FactorConstInt(-1 * ((int) _curToken.TokenMark));
                 } else if (_curToken.TokenType == TokenType.FLOAT) {
                     d = DataType.FLOAT;
+                    tmp = Translator.FactorConstFloat(-1d * ((double) _curToken.TokenMark));
                 } else {
                     _src.Report(MsgLevel.ERROR, "Name or number expected after \"-\"", true);
                     return new(false);
@@ -492,7 +491,6 @@ namespace jfc {
 
                 // We should be goood to go
                 _src.Report(MsgLevel.TRACE, "Parsed factor as minus number literal", true);
-                tmp = _translator.Factor();
                 return new(true, (d, 0), tmp);
             }
 

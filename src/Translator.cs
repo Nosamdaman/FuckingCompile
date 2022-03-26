@@ -217,14 +217,14 @@ namespace jfc {
 
             // Otherwise we'll build the array
             StringBuilder sb = new();
-            sb.Append(GetDataType(symbol) + " [ ");
+            sb.Append(GetDataType(symbol) + " < ");
             sb.Append(baseVal);
             arraySize--;
             while (arraySize > 0) {
                 sb.Append(", " + baseVal);
                 arraySize--;
             }
-            sb.Append(" ]");
+            sb.Append(" >");
             return sb.ToString();
         }
 
@@ -289,7 +289,7 @@ namespace jfc {
             if (arraySize == 0) return dt;
 
             // Otherwise build the array identifier
-            return $"[{arraySize} x {dt}]";
+            return $"<{arraySize} x {dt}>";
         }
     }
 }
