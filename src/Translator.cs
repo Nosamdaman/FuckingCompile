@@ -125,6 +125,32 @@ namespace jfc {
             return result;
         }
 
+        /// <summary> Translates a constant boolean into assembly </summary>
+        public static string FactorConstBool(bool value) {
+            if (value) {
+                return "true";
+            } else {
+                return "false";
+            }
+        }
+
+        /// <summary> Translates a constant integer into assembly </summary>
+        public static string FactorConstInt(int value) => value.ToString();
+
+        /// <summary> Translates a constant floating-point number into assembly </summary>
+        public static string FactorConstFloat(double value) => value.ToString();
+
+        /// <summary> Translates a constant string into assembly </summary>
+        public string FactorConstString(string value) {
+            StringBuilder sb = GetBuilder();
+            string str = GetNextTemp();
+            int l = value.Length + 1;
+            sb.AppendLine($"\t{str} = [{l} x i8] c\"{value}\\00\" ; String constant");
+            string ptr = GetNextTemp();
+            sb.AppendLine($"\t{ptr} = getelementptr [{l} x i8], [{l} x i8]* {str}, i32 0, i32 0 ; String pointer");
+            return ptr;
+        }
+
         public string Term() {
             StringBuilder sb = GetBuilder();
             string result = GetNextTemp();
