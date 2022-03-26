@@ -101,6 +101,7 @@ namespace jfc {
             _finishedProcedures.AppendLine(sb.ToString());
         }
 
+        /// <summary> Translates a variable reference to assembly </summary>
         public string VariableReference(Symbol variable) {
             StringBuilder sb = GetBuilder();
             string dt = GetDataType(variable);
@@ -109,6 +110,7 @@ namespace jfc {
             return result;
         }
 
+        /// <summary> Translates an array index to assembly </summary>
         public string VectorIndex(string vec, string idx, DataType dataType, int vectorSize) {
             StringBuilder sb = GetBuilder();
             string dt = GetDataType(dataType, vectorSize);
@@ -117,6 +119,7 @@ namespace jfc {
             return res;
         }
 
+        /// <summary> Translates a procedure reference to assembly </summary>
         public string ProcedureReference(Symbol procedure, Queue<string> args) {
             // Start at the beginning
             StringBuilder sb = GetBuilder();
