@@ -36,46 +36,6 @@ namespace jfc {
             return sb.ToString();
         }
 
-        /// <summary> Gets a prefix for the name of a new procedure </summary>
-        /// <returns> The prefix for the name of a new procedure </summary>
-        private string GetNextProcedure() {
-            string prefix = $"@p{_procedureCount}-";
-            _procedureCount++;
-            return prefix;
-        }
-
-        /// <summary> Converts a data type to LLVM assymbly </summary>
-        /// <param name="symbol"> The symbol who's type is to be converted </param>
-        /// <returns> The data type in LLVM assembly </returns>
-        private static string GetDataType(Symbol symbol) {
-            int arraySize = 0;
-            if (symbol.SymbolType == SymbolType.VARIABLE && symbol.IsArray) {
-                arraySize = symbol.ArraySize;
-            }
-            return GetDataType(symbol.DataType, arraySize);
-        }
-
-        /// <summary> Converts a data type to LLVM assembly </summary>
-        /// <param name="dataType"> The data type </param>
-        /// <param name="arraySize"> The array size </param>
-        /// <returns> The data type in LLVM assembly </returns>
-        private static string GetDataType(DataType dataType, int arraySize) {
-            // First convert the data type
-            string dt = dataType switch {
-                DataType.BOOL => "i8",
-                DataType.INTEGER => "i32",
-                DataType.FLOAT => "float",
-                DataType.STRING => "TODO",
-                _ => throw new System.Exception("How the fuck did you get here?")
-            };
-
-            // If we don't have an array, then we're good to go
-            if (arraySize == 0) return dt;
-
-            // Otherwise build the array identifier
-            return $"[{arraySize} x {dt}]";
-        }
-
         /// <summary> Starts the translation of a procedure </summary>
         /// <param name="procedure"> The procedure to be translated </param>
         public void StartProcedure(Symbol procedure) {
@@ -119,6 +79,46 @@ namespace jfc {
             sb.AppendLine("\tTODO: DEFAULT RETURN");
             sb.AppendLine("}");
             _finishedProcedures.AppendLine(sb.ToString());
+        }
+
+        /// <summary> Gets a prefix for the name of a new procedure </summary>
+        /// <returns> The prefix for the name of a new procedure </summary>
+        private string GetNextProcedure() {
+            string prefix = $"@p{_procedureCount}-";
+            _procedureCount++;
+            return prefix;
+        }
+
+        /// <summary> Converts a data type to LLVM assymbly </summary>
+        /// <param name="symbol"> The symbol who's type is to be converted </param>
+        /// <returns> The data type in LLVM assembly </returns>
+        private static string GetDataType(Symbol symbol) {
+            int arraySize = 0;
+            if (symbol.SymbolType == SymbolType.VARIABLE && symbol.IsArray) {
+                arraySize = symbol.ArraySize;
+            }
+            return GetDataType(symbol.DataType, arraySize);
+        }
+
+        /// <summary> Converts a data type to LLVM assembly </summary>
+        /// <param name="dataType"> The data type </param>
+        /// <param name="arraySize"> The array size </param>
+        /// <returns> The data type in LLVM assembly </returns>
+        private static string GetDataType(DataType dataType, int arraySize) {
+            // First convert the data type
+            string dt = dataType switch {
+                DataType.BOOL => "i8",
+                DataType.INTEGER => "i32",
+                DataType.FLOAT => "float",
+                DataType.STRING => "TODO",
+                _ => throw new System.Exception("How the fuck did you get here?")
+            };
+
+            // If we don't have an array, then we're good to go
+            if (arraySize == 0) return dt;
+
+            // Otherwise build the array identifier
+            return $"[{arraySize} x {dt}]";
         }
     }
 }
