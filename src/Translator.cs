@@ -103,26 +103,39 @@ namespace jfc {
 
         public string VariableReference(Symbol variable) {
             StringBuilder sb = GetBuilder();
+            string dt = GetDataType(variable);
             string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: VARIABLE REFERENCE");
-            sb.AppendLine($" ; Reference to \"{variable.Name}\"");
+            sb.AppendLine($"\t{result} = load {dt}, {dt}* {variable.AssemblyName} ; Reference to \"{variable.Name}\"");
             return result;
         }
 
-        public string ProcedureReference(Symbol procedure) {
+        public string VectorIndex(string vec, string idx, DataType dataType, int vectorSize) {
             StringBuilder sb = GetBuilder();
-            string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: Procedure REFERENCE");
-            sb.AppendLine($" ; Reference to \"{procedure.Name}\"");
-            return result;
+            string dt = GetDataType(dataType, vectorSize);
+            string res = GetNextTemp();
+            sb.AppendLine($"\t{res} = extractelement {dt} {vec}, i32 {idx} ; Array index");
+            return res;
         }
 
-        public string Factor() {
+        public string ProcedureReference(Symbol procedure, Queue<string> args) {
+            // Start at the beginning
             StringBuilder sb = GetBuilder();
-            string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: Factors");
-            sb.AppendLine($" ; Factor");
-            return result;
+            string dt = GetDataType(procedure);
+            string res = GetNextTemp();
+            sb.Append($"\t{res} = call {dt} {procedure.AssemblyName}(");
+
+            // Add any arguments
+            if (args.Count > 0) {
+                sb.Append($"{GetDataType(procedure.Parameters[0])} {args.Dequeue()}");
+                for (int idx = 1; idx < procedure.Parameters.Length; idx++) {
+                    string adt = GetDataType(procedure.Parameters[idx]);
+                    sb.Append($", {adt} {args.Dequeue()}");
+                }
+            }
+
+            // Finish the call
+            sb.AppendLine($") ; Call to \"{procedure.Name}\"");
+            return res;
         }
 
         /// <summary> Translates a constant boolean into assembly </summary>

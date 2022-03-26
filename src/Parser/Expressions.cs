@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -551,9 +552,8 @@ namespace jfc {
             if (variable.IsArray) arraySize = variable.ArraySize;
 
             // Now we'll check for indexing
-            string tmp;
+            string tmp = _translator.VariableReference(variable);
             if (_curToken.TokenType != TokenType.L_BRACKET) {
-                tmp = _translator.VariableReference(variable);
                 return new(true, (dataType, arraySize), tmp);
             }
 
@@ -584,7 +584,7 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
-            tmp = _translator.VariableReference(variable);
+            tmp = _translator.VectorIndex(tmp, status.Reg, dataType, arraySize);
             return new(true, (dataType, 0), tmp);
         }
 
@@ -606,6 +606,7 @@ namespace jfc {
             NextToken();
 
             // Parse the arguments if there are any
+            Queue<string> args = new();
             if (procedure.Parameters.Any()) {
                 // Parse the first argument
                 ParseInfo status = ProcedureArgument(procedure.Parameters.First());
@@ -614,6 +615,7 @@ namespace jfc {
                     _src.Report(MsgLevel.DEBUG, $"Failed to parse argument \"{argument.Name}\"", true);
                     return new(false);
                 }
+                args.Enqueue(status.Reg);
 
                 // Parse the remaining arguments
                 foreach (Symbol argument in procedure.Parameters.Skip(1)) {
@@ -630,6 +632,7 @@ namespace jfc {
                         _src.Report(MsgLevel.DEBUG, $"Failed to parse argument \"{argument.Name}\"", true);
                         return new(false);
                     }
+                    args.Enqueue(status.Reg);
                 }
             }
 
@@ -641,7 +644,7 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
-            string tmp = _translator.ProcedureReference(procedure);
+            string tmp = _translator.ProcedureReference(procedure, args);
             return new(true, (procedure.DataType, 0), tmp);
         }
 
@@ -669,7 +672,7 @@ namespace jfc {
             }
 
             // We should be good to go
-            return new(true);
+            return new(true, null, status.Reg);
         }
     }
 }
