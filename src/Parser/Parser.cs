@@ -14,12 +14,17 @@ namespace jfc {
         /// </summary>
         public object Data { get; set; }
 
+        /// <summary> Name of the register with the output of the parse, if applicable </summary>
+        public string Output { get; set; }
+
         /// <summary> Instantiate a new ParseInfo object </summary>
         /// <param name="success"> Whether or not the parse succeeded </param>
         /// <param name="data"> Information about the parse. Defaults to null </param>
-        public ParseInfo(bool success, object data = null) {
+        /// <param name="output"> Output register, defaults to null </param>
+        public ParseInfo(bool success, object data = null, string output = null) {
             Success = success;
             Data = data;
+            Output = output;
         }
     }
 
