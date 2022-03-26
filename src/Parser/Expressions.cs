@@ -36,18 +36,19 @@ namespace jfc {
             }
 
             // Then we see how many operations to chain together
-            return ExpressionPrime(dataType, arraySize, sb);
+            return ExpressionPrime(dataType, arraySize, status.Reg, sb);
         }
 
         /// <summary> Parses the right tail of an expression </summary>
         /// <param name="lDataType"> The data type of the left-hand arithmetic operation </param>
         /// <param name="lArraySize"> The array size of the left-hand arithmetic operation </param>
+        /// <param name="reg"> The register of the previous term </param>
         /// <param name="sb"> A StringBuilder object for building up the log message </param>
         /// <returns>
         /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
         /// tuple containing the data type and array size of the final expression.
         /// </returns>
-        private ParseInfo ExpressionPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
+        private ParseInfo ExpressionPrime(DataType lDataType, int lArraySize, string reg, StringBuilder sb) {
             // First check if we have a logical operator
             char symbol;
             if (_curToken.TokenType == TokenType.AND) {
@@ -56,7 +57,7 @@ namespace jfc {
                 symbol = '|';
             } else {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
-                return new(true, (lDataType, lArraySize));
+                return new(true, (lDataType, lArraySize), reg);
             }
 
             // Ensure the left-hand side is valid
@@ -100,7 +101,8 @@ namespace jfc {
             }
 
             // Then we do it all over again
-            return ExpressionPrime(DataType.INTEGER, arraySize, sb);
+            string tmp = _translator.Expression();
+            return ExpressionPrime(DataType.INTEGER, arraySize, tmp, sb);
         }
 
         /// <summary> Parses an arithmetic operation </summary>
@@ -120,18 +122,19 @@ namespace jfc {
             // Then we see how many relations we need to chain together
             StringBuilder sb = new();
             sb.Append("Parsed arithmetic operation as relation");
-            return ArithOpPrime(dataType, arraySize, sb);
+            return ArithOpPrime(dataType, arraySize, status.Reg, sb);
         }
 
         /// <summary> Parses the right tail of an arithmetic operation </summary>
         /// <param name="lDataType"> The data type of the left-hand relation </param>
         /// <param name="lArraySize"> The array size of the left-hand relation </param>
+        /// <param name="reg"> The register of the previous term </param>
         /// <param name="sb"> A StringBuilder object for building up the log message </param>
         /// <returns>
         /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
         /// tuple containing the data type and array size of the final arithmetic operation.
         /// </returns>
-        private ParseInfo ArithOpPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
+        private ParseInfo ArithOpPrime(DataType lDataType, int lArraySize, string reg, StringBuilder sb) {
             // First check if we have an arithmatic operator
             char symbol;
             string action;
@@ -143,7 +146,7 @@ namespace jfc {
                 action = "subtract";
             } else {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
-                return new(true, (lDataType, lArraySize));
+                return new(true, (lDataType, lArraySize), reg);
             }
 
             // Ensure the left-hand side is valid
@@ -188,7 +191,8 @@ namespace jfc {
             }
 
             // Then we go again
-            return ArithOpPrime(result, arraySize, sb);
+            string tmp = _translator.ArithOp();
+            return ArithOpPrime(result, arraySize, tmp, sb);
         }
 
         /// <summary> Parses a relation </summary>
@@ -208,18 +212,19 @@ namespace jfc {
             // Then we see how many terms we need to chain together
             StringBuilder sb = new();
             sb.Append("Parsed relation as term");
-            return RelationPrime(dataType, arraySize, sb);
+            return RelationPrime(dataType, arraySize, status.Reg, sb);
         }
 
         /// <summary> Parses the right tail of a relation </summary>
         /// <param name="lDataType"> The data type of the left-hand term </param>
         /// <param name="lArraySize"> The array size of the left-hand term </param>
+        /// <param name="reg"> The register of the previous term </param>
         /// <param name="sb"> A StringBuilder object for building up the log message </param>
         /// <returns>
         /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
         /// tuple containing the data type and array size of the final relation.
         /// </returns>
-        private ParseInfo RelationPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
+        private ParseInfo RelationPrime(DataType lDataType, int lArraySize, string reg, StringBuilder sb) {
             // First check if we have a comparison operator
             string symbol;
             bool canBeString = false;
@@ -246,7 +251,7 @@ namespace jfc {
                 break;
             default:
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
-                return new(true, (lDataType, lArraySize));
+                return new(true, (lDataType, lArraySize), reg);
             }
 
             // Ensure the left-hand side is valid
@@ -283,7 +288,8 @@ namespace jfc {
             }
 
             // Now we go again
-            return RelationPrime(DataType.BOOL, arraySize, sb);
+            string tmp = _translator.Relation();
+            return RelationPrime(DataType.BOOL, arraySize, tmp, sb);
         }
 
         /// <summary> Parses a term </summary>
@@ -303,18 +309,19 @@ namespace jfc {
             // Then we see how many factors we need to chain together
             StringBuilder sb = new();
             sb.Append("Parsed term as factor");
-            return TermPrime(dataType, arraySize, sb);
+            return TermPrime(dataType, arraySize, status.Reg, sb);
         }
 
         /// <summary> Parses the right tail of a term </summary>
         /// <param name="lDataType"> The data type of the left-hand factor </param>
         /// <param name="lArraySize"> The array size of the left-hand factor </param>
+        /// <param name="reg"> The register of the previous factor </param>
         /// <param name="sb"> A StringBuilder object for building up the log message </param>
         /// <returns>
         /// A ParseInfo describing the success of the parse. If parsing succeeded, the Data property will be set to a
         /// tuple containing the data type and array size of the final term.
         /// </returns>
-        private ParseInfo TermPrime(DataType lDataType, int lArraySize, StringBuilder sb) {
+        private ParseInfo TermPrime(DataType lDataType, int lArraySize, string reg, StringBuilder sb) {
             // First check if we have a multiplication operation
             char symbol;
             string action;
@@ -326,7 +333,7 @@ namespace jfc {
                 action = "divide";
             } else {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
-                return new(true, (lDataType, lArraySize));
+                return new(true, (lDataType, lArraySize), reg);
             }
 
             // Ensure the left-hand side is valid
@@ -371,7 +378,8 @@ namespace jfc {
             }
 
             // Now we go again
-            return TermPrime(result, arraySize, sb);
+            string tmp = _translator.Term();
+            return TermPrime(result, arraySize, tmp, sb);
         }
 
         /// <summary> Parses a factor </summary>
@@ -380,6 +388,8 @@ namespace jfc {
         /// DataType of the factor.
         /// </returns>
         private ParseInfo Factor() {
+            string tmp;
+
             // The first step is to check if we have have a left parens. If so, we should have a nested expression
             // statement.
             if (_curToken.TokenType == TokenType.L_PAREN) {
@@ -395,7 +405,8 @@ namespace jfc {
                 }
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as a nested expression", true);
-                return new(true, status.Data);
+                tmp = _translator.Factor();
+                return new(true, status.Data, tmp);
             }
 
             // If that fails, we'll see if we have a procedure or name. If either is the case, then we'll need to see an
@@ -424,7 +435,8 @@ namespace jfc {
 
                 // We should be good here
                 _src.Report(MsgLevel.TRACE, "Parsed factor as symbol reference");
-                return new(true, status.Data);
+                tmp = _translator.Factor();
+                return new(true, status.Data, tmp);
             }
 
             // If we have a minus symbol, then we could have either a name or a number
@@ -459,7 +471,8 @@ namespace jfc {
 
                     // We should be good to go
                     _src.Report(MsgLevel.TRACE, $"Parsed factor as minus \"{symbol.Name}\"", true);
-                    return new(true, (dataType, arraySize));
+                    tmp = _translator.Factor();
+                    return new(true, (dataType, arraySize), tmp);
                 }
 
                 // Otherwise, it should be a number
@@ -479,35 +492,40 @@ namespace jfc {
 
                 // We should be goood to go
                 _src.Report(MsgLevel.TRACE, "Parsed factor as minus number literal", true);
-                return new(true, (d, 0));
+                tmp = _translator.Factor();
+                return new(true, (d, 0), tmp);
             }
 
             // We can accept integers
             if (_curToken.TokenType == TokenType.INTEGER) {
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as integer literal", true);
-                return new(true, (DataType.INTEGER, 0));
+                tmp = _translator.Factor();
+                return new(true, (DataType.INTEGER, 0), tmp);
             }
 
             // We can accept floating-point values
             if (_curToken.TokenType == TokenType.FLOAT) {
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as floating-point literal", true);
-                return new(true, (DataType.FLOAT, 0));
+                tmp = _translator.Factor();
+                return new(true, (DataType.FLOAT, 0), tmp);
             }
 
             // We can accept strings
             if (_curToken.TokenType == TokenType.STRING) {
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as string literal", true);
-                return new(true, (DataType.STRING, 0));
+                tmp = _translator.Factor();
+                return new(true, (DataType.STRING, 0), tmp);
             }
 
             // We can accept boolean literals
             if (_curToken.TokenType == TokenType.TRUE_RW || _curToken.TokenType == TokenType.FALSE_RW) {
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as boolean literal", true);
-                return new(true, (DataType.BOOL, 0));
+                tmp = _translator.Factor();
+                return new(true, (DataType.BOOL, 0), tmp);
             }
 
             // Anything else is unacceptable
@@ -531,8 +549,10 @@ namespace jfc {
             if (variable.IsArray) arraySize = variable.ArraySize;
 
             // Now we'll check for indexing
+            string tmp;
             if (_curToken.TokenType != TokenType.L_BRACKET) {
-                return new(true, (dataType, arraySize));
+                tmp = _translator.VariableReference(variable);
+                return new(true, (dataType, arraySize), tmp);
             }
 
             // We'll error if the variable isn't an array
@@ -562,7 +582,8 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
-            return new(true, (dataType, 0));
+            tmp = _translator.VariableReference(variable);
+            return new(true, (dataType, 0), tmp);
         }
 
         /// <summary> Parses a procedure reference </summary>
@@ -618,7 +639,8 @@ namespace jfc {
             NextToken();
 
             // We should be good to go
-            return new(true, (procedure.DataType, 0));
+            string tmp = _translator.ProcedureReference(procedure);
+            return new(true, (procedure.DataType, 0), tmp);
         }
 
         /// <summary> Parses a single argument in a procedure call </summary>

@@ -4,6 +4,7 @@ using System.Text;
 namespace jfc {
     /// <summary> Class responsible for translating the source code to LLVM IR </summary>
     public class Translator {
+        private int _tempCount = 0;
         private int _globalCount = 0;
         private int _localCount = 0;
         private int _procedureCount = 0;
@@ -100,6 +101,71 @@ namespace jfc {
             _finishedProcedures.AppendLine(sb.ToString());
         }
 
+        public string VariableReference(Symbol variable) {
+            StringBuilder sb = GetBuilder();
+            string result = GetNextTemp();
+            sb.Append($"\t{result} TODO: VARIABLE REFERENCE");
+            sb.AppendLine($" ; Reference to \"{variable.Name}\"");
+            return result;
+        }
+
+        public string ProcedureReference(Symbol procedure) {
+            StringBuilder sb = GetBuilder();
+            string result = GetNextTemp();
+            sb.Append($"\t{result} TODO: Procedure REFERENCE");
+            sb.AppendLine($" ; Reference to \"{procedure.Name}\"");
+            return result;
+        }
+
+        public string Factor() {
+            StringBuilder sb = GetBuilder();
+            string result = GetNextTemp();
+            sb.Append($"\t{result} TODO: Factors");
+            sb.AppendLine($" ; Factor");
+            return result;
+        }
+
+        public string Term() {
+            StringBuilder sb = GetBuilder();
+            string result = GetNextTemp();
+            sb.Append($"\t{result} TODO: Terms");
+            sb.AppendLine($" ; Term");
+            return result;
+        }
+
+        public string Relation() {
+            StringBuilder sb = GetBuilder();
+            string result = GetNextTemp();
+            sb.Append($"\t{result} TODO: Relations");
+            sb.AppendLine($" ; Relation");
+            return result;
+        }
+
+        public string ArithOp() {
+            StringBuilder sb = GetBuilder();
+            string result = GetNextTemp();
+            sb.Append($"\t{result} TODO: Aritmetic operations");
+            sb.AppendLine($" ; Aritmetic operation");
+            return result;
+        }
+
+        public string Expression() {
+            StringBuilder sb = GetBuilder();
+            string result = GetNextTemp();
+            sb.Append($"\t{result} TODO: Expression");
+            sb.AppendLine($" ; Expression");
+            return result;
+        }
+
+        /// <summary> Gets the currently active string builder </summary>
+        /// <returns> The currently active string builder </returns>
+        private StringBuilder GetBuilder() {
+            if (_procedures.Count != 0)
+                return _procedures.Peek();
+            else
+                return _mainBody;
+        }
+
         /// <summary> Gets the default value for a symbol </summary>
         /// <param name="symbol"> The symbol whose default value is to be retrieved </param>
         /// <returns> The default value for the symbol </returns>
@@ -134,6 +200,14 @@ namespace jfc {
             }
             sb.Append(" ]");
             return sb.ToString();
+        }
+
+        /// <summary> Gets a new temporary register </summary>
+        /// <returns> The name of the new register </returns>
+        private string GetNextTemp() {
+            string register = $"%{_tempCount}";
+            _tempCount++;
+            return register;
         }
 
         /// <summary> Gets a prefix for the name of a new global variable </summary>

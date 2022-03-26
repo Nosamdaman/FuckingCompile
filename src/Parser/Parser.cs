@@ -15,7 +15,7 @@ namespace jfc {
         public object Data { get; set; }
 
         /// <summary> Name of the register with the output of the parse, if applicable </summary>
-        public string Output { get; set; }
+        public string Reg { get; set; }
 
         /// <summary> Instantiate a new ParseInfo object </summary>
         /// <param name="success"> Whether or not the parse succeeded </param>
@@ -24,7 +24,7 @@ namespace jfc {
         public ParseInfo(bool success, object data = null, string output = null) {
             Success = success;
             Data = data;
-            Output = output;
+            Reg = output;
         }
     }
 
