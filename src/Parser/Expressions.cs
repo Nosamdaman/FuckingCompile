@@ -498,17 +498,17 @@ namespace jfc {
 
             // We can accept integers
             if (_curToken.TokenType == TokenType.INTEGER) {
+                tmp = Translator.FactorConstInt((int) _curToken.TokenMark);
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as integer literal", true);
-                tmp = _translator.Factor();
                 return new(true, (DataType.INTEGER, 0), tmp);
             }
 
             // We can accept floating-point values
             if (_curToken.TokenType == TokenType.FLOAT) {
+                tmp = Translator.FactorConstFloat((double) _curToken.TokenMark);
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as floating-point literal", true);
-                tmp = _translator.Factor();
                 return new(true, (DataType.FLOAT, 0), tmp);
             }
 
@@ -522,10 +522,10 @@ namespace jfc {
 
             // We can accept boolean literals
             if (_curToken.TokenType == TokenType.TRUE_RW || _curToken.TokenType == TokenType.FALSE_RW) {
+                bool value = _curToken.TokenType == TokenType.TRUE_RW;
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as boolean literal", true);
-                tmp = _translator.Factor();
-                return new(true, (DataType.BOOL, 0), tmp);
+                return new(true, (DataType.BOOL, 0), Translator.FactorConstBool(value));
             }
 
             // Anything else is unacceptable
