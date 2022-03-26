@@ -151,6 +151,22 @@ namespace jfc {
             return ptr;
         }
 
+        /// <summary> Inverts an integer </summary>
+        public string FactorNegInt(string reg) {
+            StringBuilder sb = GetBuilder();
+            string res = GetNextTemp();
+            sb.AppendLine($"\t{res} = mul i32 {reg}, -1 ; Invert integer value");
+            return res;
+        }
+
+        /// <summary> Inverts a floating-point number </summary>
+        public string FactorNegFloat(string reg) {
+            StringBuilder sb = GetBuilder();
+            string res = GetNextTemp();
+            sb.AppendLine($"\t{res} = fneg float {reg} ; Invert floating-point value");
+            return res;
+        }
+
         public string Term() {
             StringBuilder sb = GetBuilder();
             string result = GetNextTemp();

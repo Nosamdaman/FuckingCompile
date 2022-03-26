@@ -405,8 +405,7 @@ namespace jfc {
                 }
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as a nested expression", true);
-                tmp = _translator.Factor();
-                return new(true, status.Data, tmp);
+                return new(true, status.Data, status.Reg);
             }
 
             // If that fails, we'll see if we have a procedure or name. If either is the case, then we'll need to see an
@@ -435,8 +434,7 @@ namespace jfc {
 
                 // We should be good here
                 _src.Report(MsgLevel.TRACE, "Parsed factor as symbol reference");
-                tmp = _translator.Factor();
-                return new(true, status.Data, tmp);
+                return new(true, status.Data, status.Reg);
             }
 
             // If we have a minus symbol, then we could have either a name or a number
@@ -464,14 +462,20 @@ namespace jfc {
 
                     // We need an integer or a float
                     (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
-                    if (dataType != DataType.INTEGER || dataType != DataType.FLOAT) {
+                    if (dataType != DataType.INTEGER && dataType != DataType.FLOAT) {
                         _src.Report(MsgLevel.ERROR, $"Type \"{dataType}\" cannot be inverted", true);
                         return new(false);
                     }
 
                     // We should be good to go
                     _src.Report(MsgLevel.TRACE, $"Parsed factor as minus \"{symbol.Name}\"", true);
-                    tmp = _translator.Factor();
+                    if (dataType == DataType.INTEGER) {
+                        tmp = _translator.FactorNegInt(status.Reg);
+                    } else if (dataType == DataType.FLOAT) {
+                        tmp = _translator.FactorNegFloat(status.Reg);
+                    } else {
+                        throw new System.Exception("How the fuck did you get here?");
+                    }
                     return new(true, (dataType, arraySize), tmp);
                 }
 
