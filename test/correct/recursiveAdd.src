@@ -1,0 +1,40 @@
+program recursiveAdd is
+
+// Global declarations
+variable val0 : integer;
+variable val1 : integer;
+variable res : integer;
+variable dump : bool;
+procedure Add : integer (variable val0 : integer, variable val1 : integer)
+    // Local declarations
+    procedure AddRec : integer (variable val0: integer, variable val1: integer)
+    begin
+        if (val1 == 0) then 
+            return val0;
+        else
+            return AddRec(val0 + 1, val1 - 1);
+        end if;
+    end procedure;
+begin
+    // Procedure code
+    if (val1 < 0) then
+        dump := putString("val1 must be greater than or equal to zero!\n");
+        return -1;
+    else
+        return AddRec(val0, val1);
+    end if;
+end procedure;
+
+// Global code
+begin
+
+dump := putString("Enter the first value to add: ");
+val0 := getInteger();
+dump := putString("Enter the second value to add: ");
+val1 := getInteger();
+res := Add(val0, val1);
+dump := putString("The result is: ");
+dump := putInteger(res);
+dump := putString("\n");
+
+end program .

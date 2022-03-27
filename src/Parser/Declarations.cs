@@ -48,6 +48,10 @@ namespace jfc {
                 _local.Peek().Add(parameter.Name, parameter);
             }
 
+            // We'll also push the symbol for the actual procedure onto the scope if that procedure is not already in
+            // the global scope. This will allow for local recursive functions to reference themselves.
+            if (!isGlobal) { _local.Peek().Add(proc.Name, proc); }
+
             // Now we'll begin by writing the opening part of the procedure
             _translator.StartProcedure(proc);
 
