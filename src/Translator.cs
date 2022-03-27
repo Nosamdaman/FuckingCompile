@@ -101,6 +101,16 @@ namespace jfc {
             _finishedProcedures.AppendLine(sb.ToString());
         }
 
+        /// <summary> Casts an integer to a floating-point value </summary>
+        public string IntToFloat(string reg, int arraySize) {
+            StringBuilder sb = GetBuilder();
+            string res = GetNextTemp();
+            string dti = GetDataType(DataType.INTEGER, arraySize);
+            string dtf = GetDataType(DataType.FLOAT, arraySize);
+            sb.AppendLine($"\t{res} = sitofp {dti} {reg} to {dtf} ; Cast int to float");
+            return res;
+        }
+
         /// <summary> Translates a variable reference to assembly </summary>
         public string VariableReference(Symbol variable) {
             StringBuilder sb = GetBuilder();
@@ -183,12 +193,20 @@ namespace jfc {
             return res;
         }
 
-        public string Term() {
+        /// <summary> Multiplies or divides two numbers </summary>
+        public string Term(TokenType operation, string l, string r, DataType dataType, int arraySize) {
             StringBuilder sb = GetBuilder();
-            string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: Terms");
-            sb.AppendLine($" ; Term");
-            return result;
+            string res = GetNextTemp();
+            string dt = GetDataType(dataType, arraySize);
+            string op = (operation, dataType) switch {
+                (TokenType.TIMES, DataType.INTEGER) => "mul",
+                (TokenType.DIVIDE, DataType.INTEGER) => "sdiv",
+                (TokenType.TIMES, DataType.FLOAT) => "fmul",
+                (TokenType.DIVIDE, DataType.FLOAT) => "fdiv",
+                _ => throw new System.Exception("How the fuck did you even get here?")
+            };
+            sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Multiply");
+            return res;
         }
 
         public string Relation() {

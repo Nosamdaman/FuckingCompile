@@ -336,6 +336,7 @@ namespace jfc {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true, (lDataType, lArraySize), reg);
             }
+            TokenType op = _curToken.TokenType;
 
             // Ensure the left-hand side is valid
             if (lDataType == DataType.STRING || lDataType == DataType.BOOL) {
@@ -378,8 +379,13 @@ namespace jfc {
                 return new(false);
             }
 
+            // Now we'll write the assembly
+            if (lDataType != result) reg = _translator.IntToFloat(reg, lArraySize);
+            string rReg = status.Reg;
+            if (rDataType != result)  rReg = _translator.IntToFloat(rReg, rArraySize);
+            string tmp = _translator.Term(op, reg, rReg, result, lArraySize);
+
             // Now we go again
-            string tmp = _translator.Term();
             return TermPrime(result, arraySize, tmp, sb);
         }
 
