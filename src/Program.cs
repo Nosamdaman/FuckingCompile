@@ -14,6 +14,7 @@ namespace jfc {
             "Options:\n" +
             "  -o --output OUTPUT    Set the output file for a successful compilation.\n" + 
             "                        Defaults to \"a.out\".\n" +
+            "  -D --dump-assembly    Dumps the translated LLVM Assembly to a file\n" +
             "  -V --verbosity LEVEL  Sets the verbosity level. Can be one of \"0\", \"1\", or\n" +
             "                        \"2\". Defaults to \"0\".\n" +
             "  -h --help             Show this screen\n" +
@@ -25,7 +26,8 @@ namespace jfc {
         static void Main(string[] args) {
             // Initialize parameters
             string sourceFile = null;
-            string outputFile = "a.ll";
+            string outputFile = "a.out";
+            bool dumpAssembly = false;
             MsgLevel verbosity = MsgLevel.INFO;
 
             // We'll parse most of the inputs in a loop here
@@ -69,6 +71,8 @@ namespace jfc {
                     }
                     outputFile = argQueue.Dequeue();
                     continue;
+                } else if (arg == "--dump-assembly") {
+                    dumpAssembly = true;
                 }
 
                 // Next we'll try to parse an argument block
@@ -85,6 +89,9 @@ namespace jfc {
                             return;
                         case 'V':
                             verbosity = MsgLevel.DEBUG;
+                            break;
+                        case 'D':
+                            dumpAssembly = true;
                             break;
                         case 'o':
                             if (optionQueue.Count > 0) {
@@ -140,7 +147,7 @@ namespace jfc {
                 return;
             }
 
-            // Test code, we'll run the parser
+            // We'll run the parser
             Parser parser = new(src);
             ParseInfo status = parser.Program();
 
@@ -152,9 +159,11 @@ namespace jfc {
                 return;
             }
 
-            // Now we write the result
-            string output = (string) status.Data;
-            File.WriteAllText(outputFile, output);
+            // Now we write the result if desired
+            if (dumpAssembly) {
+                string output = (string) status.Data;
+                File.WriteAllText(outputFile + ".ll", output);
+            }
 
             // Close the file
             src.Dispose();
