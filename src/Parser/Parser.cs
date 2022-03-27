@@ -273,22 +273,5 @@ namespace jfc {
             }
             return new(true);
         }
-
-        // TODO: TYPE VALIDATION
-        private ParseInfo ArgumentList() {
-            // We should have an expression first
-            ParseInfo status = Expression();
-            if (!status.Success) {
-                _src.Report(MsgLevel.DEBUG, "Expression expected in argument list", true);
-                return new(false);
-            }
-
-            // If a comma comes next, then we do it again, otherwise, we're good
-            if (_curToken.TokenType == TokenType.COMMA) {
-                NextToken();
-                return ArgumentList();
-            }
-            return new(true);
-        }
     }
 }
