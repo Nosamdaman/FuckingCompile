@@ -43,12 +43,6 @@ define private i1 @putInteger(i32 %int) {
 ; Writes a floating-point number
 define private i1 @putFloat(float %float) {
     ; If the number is 6 orders of magnitude above or below 1, we'll use scientific notation
-    ; %floatd = fpext float %float to double
-    ; %logd = call double @llvm.log10.f64(double %floatd)
-    ; %logf = fptrunc double %logd to float
-    ; %log = fptosi float %logf to i32
-    ; %cond0 = icmp sle i32 %log, -6
-    ; %cond1 = icmp sge i32 %log, 6
     %min = fdiv float 1.0, 1.0e+6
     %cond0 = fcmp ole float %float, %min
     %cond1 = fcmp oge float %float, 1.0e+6
