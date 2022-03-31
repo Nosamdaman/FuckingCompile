@@ -277,6 +277,8 @@ namespace jfc {
                 return new(false);
             }
 
+            // TODO: CHECK TYPE COMPATIBILITY
+
             // Ensure that the array sizes are valid
             int arraySize;
             if (lArraySize == 0 || rArraySize == 0) {

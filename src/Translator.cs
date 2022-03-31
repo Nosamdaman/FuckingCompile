@@ -218,6 +218,45 @@ namespace jfc {
             return res;
         }
 
+        /// <summry> Compares two values </summary>
+        public string Relation(TokenType operation, string l, string r, DataType dataType, int lSize, int rSize) {
+            StringBuilder sb = GetBuilder();
+            string res;
+            string op = (operation, dataType) switch {
+                (TokenType.EQ, DataType.BOOL) => "icmp eq",
+                (TokenType.NEQ, DataType.BOOL) => "icmp ne",
+                (TokenType.GT, DataType.BOOL) => "icmp ugt",
+                (TokenType.LT, DataType.BOOL) => "icmp ult",
+                (TokenType.GT_EQ, DataType.BOOL) => "icmp uge",
+                (TokenType.LT_EQ, DataType.BOOL) => "icmp ule",
+                (TokenType.EQ, DataType.INTEGER) => "icmp eq",
+                (TokenType.NEQ, DataType.INTEGER) => "icmp ne",
+                (TokenType.GT, DataType.INTEGER) => "icmp sgt",
+                (TokenType.LT, DataType.INTEGER) => "icmp slt",
+                (TokenType.GT_EQ, DataType.INTEGER) => "icmp sge",
+                (TokenType.LT_EQ, DataType.INTEGER) => "icmp sle",
+                (TokenType.EQ, DataType.FLOAT) => "fcmp oeq",
+                (TokenType.NEQ, DataType.FLOAT) => "fcmp one",
+                (TokenType.GT, DataType.FLOAT) => "fcmp ogt",
+                (TokenType.LT, DataType.FLOAT) => "fcmp olt",
+                (TokenType.GT_EQ, DataType.FLOAT) => "fcmp oge",
+                (TokenType.LT_EQ, DataType.FLOAT) => "fcmp ole",
+                _ => throw new System.Exception("How the fuck did you even get here?")
+            };
+            if (lSize == rSize) {
+                res = GetNextTemp();
+                string dt = GetDataType(dataType, lSize);
+                sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Compare");
+            } else if (lSize != 0) {
+                sb.AppendLine("\t; Compare a vector to a scalar");
+                res = VectorScalarOp(l, r, op, dataType, lSize);
+            } else {
+                sb.AppendLine("\t; Compare a scalar to a vector");
+                res = ScalarVectorOp(r, l, op, dataType, rSize);
+            }
+            return res;
+        }
+
         public string Relation() {
             StringBuilder sb = GetBuilder();
             string result = GetNextTemp();
