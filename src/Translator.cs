@@ -194,10 +194,9 @@ namespace jfc {
         }
 
         /// <summary> Multiplies or divides two numbers </summary>
-        public string Term(TokenType operation, string l, string r, DataType dataType, int arraySize) {
+        public string Term(TokenType operation, string l, string r, DataType dataType, int lSize, int rSize) {
             StringBuilder sb = GetBuilder();
-            string res = GetNextTemp();
-            string dt = GetDataType(dataType, arraySize);
+            string res;
             string op = (operation, dataType) switch {
                 (TokenType.TIMES, DataType.INTEGER) => "mul",
                 (TokenType.DIVIDE, DataType.INTEGER) => "sdiv",
@@ -205,7 +204,17 @@ namespace jfc {
                 (TokenType.DIVIDE, DataType.FLOAT) => "fdiv",
                 _ => throw new System.Exception("How the fuck did you even get here?")
             };
-            sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Multiply");
+            if (lSize == rSize) {
+                res = GetNextTemp();
+                string dt = GetDataType(dataType, lSize);
+                sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Multiply");
+            } else if (lSize != 0) {
+                sb.AppendLine("\t; Multiply a vector by a scalar");
+                res = VectorScalarOp(l, r, op, dataType, lSize);
+            } else {
+                sb.AppendLine("\t; Multiply a scalar by a vector");
+                res = ScalarVectorOp(r, l, op, dataType, rSize);
+            }
             return res;
         }
 
@@ -340,6 +349,40 @@ namespace jfc {
 
             // Otherwise build the array identifier
             return $"<{arraySize} x {dt}>";
+        }
+
+        private string VectorScalarOp(string vec, string reg, string op, DataType dataType, int arraySize) {
+            StringBuilder sb = GetBuilder();
+            string dt = GetDataType(dataType, 0);
+            string dtv = GetDataType(dataType, arraySize);
+            string res = vec;
+            for (int idx = 0; idx < arraySize; idx++) {
+                string tmp0 = GetNextTemp();
+                sb.AppendLine($"\t{tmp0} = extractelement {dtv} {res}, i32 {idx}");
+                string tmp1 = GetNextTemp();
+                sb.AppendLine($"\t{tmp1} = {op} {dt} {tmp0}, {reg}");
+                string tmp2 = GetNextTemp();
+                sb.AppendLine($"\t{tmp2} = insertelement {dtv} {res}, i32 {tmp1}, i32 {idx}");
+                res = tmp2;
+            }
+            return res;
+        }
+
+        private string ScalarVectorOp(string vec, string reg, string op, DataType dataType, int arraySize) {
+            StringBuilder sb = GetBuilder();
+            string dt = GetDataType(dataType, 0);
+            string dtv = GetDataType(dataType, arraySize);
+            string res = vec;
+            for (int idx = 0; idx < arraySize; idx++) {
+                string tmp0 = GetNextTemp();
+                sb.AppendLine($"\t{tmp0} = extractelement {dtv} {res}, i32 {idx}");
+                string tmp1 = GetNextTemp();
+                sb.AppendLine($"\t{tmp1} = {op} {dt} {reg}, {tmp0}");
+                string tmp2 = GetNextTemp();
+                sb.AppendLine($"\t{tmp2} = insertelement {dtv} {res}, i32 {tmp1}, i32 {idx}");
+                res = tmp2;
+            }
+            return res;
         }
     }
 }

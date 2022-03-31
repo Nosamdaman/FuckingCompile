@@ -383,7 +383,7 @@ namespace jfc {
             if (lDataType != result) reg = _translator.IntToFloat(reg, lArraySize);
             string rReg = status.Reg;
             if (rDataType != result)  rReg = _translator.IntToFloat(rReg, rArraySize);
-            string tmp = _translator.Term(op, reg, rReg, result, lArraySize);
+            string tmp = _translator.Term(op, reg, rReg, result, lArraySize, rArraySize);
 
             // Now we go again
             return TermPrime(result, arraySize, tmp, sb);
