@@ -5,6 +5,8 @@ variable int : integer;
 variable dec : float;
 variable flag : bool;
 variable intM : integer[2];
+variable intM2 : integer[3];
+variable decM : float[3];
 
 begin
 
@@ -12,5 +14,6 @@ int := int + 7;
 intM := intM + 7;
 intM := intM + intM + 7 / 2.2 - intM * intM;
 intM := dec * 3 / 2.3 * intM + intM;
+intM2 := intM2 >= decM;
 
 end program .

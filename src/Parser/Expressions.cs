@@ -254,6 +254,7 @@ namespace jfc {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true, (lDataType, lArraySize), reg);
             }
+            TokenType op = _curToken.TokenType;
 
             // Ensure the left-hand side is valid
             if (!canBeString && lDataType == DataType.STRING) {
@@ -297,8 +298,34 @@ namespace jfc {
                 return new(false);
             }
 
+            // Do any casts
+            string lReg = reg;
+            string rReg = status.Reg;
+            DataType dt = lDataType > rDataType ? lDataType : rDataType;
+            if (dt == DataType.INTEGER) {
+                if (lDataType == DataType.BOOL) {
+                    lReg = _translator.BoolToInt();
+                }
+                if (rDataType == DataType.BOOL) {
+                    rReg = _translator.BoolToInt();
+                }
+            } else if (dt == DataType.FLOAT) {
+                if (lDataType == DataType.INTEGER) {
+                    lReg = _translator.IntToFloat(lReg, lArraySize);
+                } else if (rDataType == DataType.INTEGER) {
+                    rReg = _translator.IntToFloat(rReg, rArraySize);
+                }
+            }
+
+            // Now we'll actually convert the relation to assembly
+            string tmp;
+            if (lDataType == DataType.STRING) {
+                tmp = _translator.RelationString();
+            } else {
+                tmp = _translator.Relation(op, lReg, rReg, dt, lArraySize, rArraySize);
+            }
+
             // Now we go again
-            string tmp = _translator.Relation();
             return RelationPrime(DataType.BOOL, arraySize, tmp, sb);
         }
 

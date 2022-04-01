@@ -111,6 +111,14 @@ namespace jfc {
             return res;
         }
 
+        public string BoolToInt() {
+            StringBuilder sb = GetBuilder();
+            string result = GetNextTemp();
+            sb.Append($"\t{result} TODO: Bool to Int");
+            sb.AppendLine($" ; Cast boolean to integer");
+            return result;
+        }
+
         /// <summary> Translates a variable reference to assembly </summary>
         public string VariableReference(Symbol variable) {
             StringBuilder sb = GetBuilder();
@@ -257,10 +265,11 @@ namespace jfc {
             return res;
         }
 
-        public string Relation() {
+        /// <summary> Compares two strings </summary>
+        public string RelationString() {
             StringBuilder sb = GetBuilder();
             string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: Relations");
+            sb.Append($"\t{result} TODO: String Relations");
             sb.AppendLine($" ; Relation");
             return result;
         }
