@@ -15,5 +15,6 @@ begin
 // decM := intM + 2 - decM;
 // str := str + 2;
 // flag := flag | int;
+intM := intM == "asdf";
 
 end program .

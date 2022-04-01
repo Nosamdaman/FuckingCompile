@@ -277,7 +277,14 @@ namespace jfc {
                 return new(false);
             }
 
-            // TODO: CHECK TYPE COMPATIBILITY
+            // Ensure that the types are compatible
+            if (lDataType != rDataType) {
+                int diff = System.Math.Abs(lDataType - rDataType);
+                if (lDataType == DataType.STRING || rDataType == DataType.STRING || diff > 1) {
+                    _src.Report(MsgLevel.ERROR, $"Type mismatch of \"{lDataType}\" and \"{rDataType}\"", true);
+                    return new(false);
+                }
+            }
 
             // Ensure that the array sizes are valid
             int arraySize;
