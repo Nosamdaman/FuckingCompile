@@ -153,6 +153,7 @@ namespace jfc {
                 return new(false);
             }
             NextToken();
+            _translator.TempCount = 1;
             status = StatementList(new[] { TokenType.END_RW, TokenType.EOF }, null);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Statement list expected after \"BEGIN\"", true);

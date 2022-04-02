@@ -4,7 +4,6 @@ using System.Text;
 namespace jfc {
     /// <summary> Class responsible for translating the source code to LLVM IR </summary>
     public class Translator {
-        private int _tempCount = 1;
         private int _globalCount = 0;
         private int _localCount = 0;
         private int _procedureCount = 0;
@@ -13,6 +12,9 @@ namespace jfc {
         private readonly StringBuilder _mainBody = new();
         private readonly StringBuilder _finishedProcedures = new();
         private readonly Stack<StringBuilder> _procedures = new();
+
+        /// <summary> The temorary variable counter </summary>
+        public int TempCount { get; set; } = 1;
 
         /// <summary> Instantiates the class </summary>
         public Translator() {
@@ -437,8 +439,8 @@ namespace jfc {
         /// <summary> Gets a new temporary register </summary>
         /// <returns> The name of the new register </returns>
         private string GetNextTemp() {
-            string register = $"%{_tempCount}";
-            _tempCount++;
+            string register = $"%{TempCount}";
+            TempCount++;
             return register;
         }
 

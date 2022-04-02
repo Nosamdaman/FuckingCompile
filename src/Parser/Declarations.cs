@@ -52,6 +52,10 @@ namespace jfc {
             // the global scope. This will allow for local recursive functions to reference themselves.
             if (!isGlobal) { _local.Peek().Add(proc.Name, proc); }
 
+            // Save and reset the temp count
+            int tempCount = _translator.TempCount;
+            _translator.TempCount = 1;
+
             // Now we'll begin by writing the opening part of the procedure
             _translator.StartProcedure(proc);
 
@@ -65,6 +69,9 @@ namespace jfc {
 
             // We can now finish the procedure
             _translator.FinishProcedure(proc);
+
+            // Revert the temp count
+            _translator.TempCount = tempCount;
 
             // We should be good to go
             _src.Report(MsgLevel.INFO, $"Procedure \"{proc.Name}\" of type \"{proc.DataType}\" parsed");
