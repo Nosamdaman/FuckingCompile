@@ -161,15 +161,6 @@ namespace jfc {
         "    %norm = sub i8 %char, 48\n" +
         "    %int = zext i8 %norm to i32\n" +
         "    ret i32 %int\n" +
-        "}\n" +
-        "\n" +
-        "define float @makef(i32 %l, i32 %r, i32 %div) {\n" +
-        "    %lf = sitofp i32 %l to float\n" +
-        "    %rf = sitofp i32 %r to float\n" +
-        "    %rdiv = sitofp i32 %div to float\n" +
-        "    %dec = fdiv float %rf, %rdiv\n" +
-        "    %num = fadd float %lf, %dec\n" +
-        "    ret float %num\n" +
         "}\n";
     }
 }
