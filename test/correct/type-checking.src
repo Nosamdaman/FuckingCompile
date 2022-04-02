@@ -15,5 +15,6 @@ intM := intM + 7;
 intM := intM + intM + 7 / 2.2 - intM * intM;
 intM := dec * 3 / 2.3 * intM + intM;
 intM2 := intM2 >= decM;
+intM2 := int | not intM2;
 
 end program .

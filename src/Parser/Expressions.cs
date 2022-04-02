@@ -36,8 +36,12 @@ namespace jfc {
                 return new(false);
             }
 
+            // Invert the integer if needed
+            string reg = status.Reg;
+            if (haveNot) reg = _translator.ExpressionInv(reg, arraySize);
+
             // Then we see how many operations to chain together
-            return ExpressionPrime(dataType, arraySize, status.Reg, sb);
+            return ExpressionPrime(dataType, arraySize, reg, sb);
         }
 
         /// <summary> Parses the right tail of an expression </summary>
@@ -60,6 +64,7 @@ namespace jfc {
                 _src.Report(MsgLevel.TRACE, sb.ToString(), true);
                 return new(true, (lDataType, lArraySize), reg);
             }
+            TokenType op = _curToken.TokenType;
 
             // Ensure the left-hand side is valid
             if (lDataType != DataType.INTEGER) {
@@ -68,9 +73,11 @@ namespace jfc {
             }
 
             // Then check for a "not"
+            bool haveNot = false;
             NextToken();
             sb.Append($" {symbol}");
             if (_curToken.TokenType == TokenType.NOT_RW) {
+                haveNot = true;
                 NextToken();
                 sb.Append(" not");
             }
@@ -101,8 +108,14 @@ namespace jfc {
                 return new(false);
             }
 
+            // Invert the right-side if needed
+            string rReg = status.Reg;
+            if (haveNot) rReg = _translator.ExpressionInv(rReg, rArraySize);
+
+            // Translate the operation
+            string tmp = _translator.Expression(op, reg, rReg, lArraySize, rArraySize);
+
             // Then we do it all over again
-            string tmp = _translator.Expression();
             return ExpressionPrime(DataType.INTEGER, arraySize, tmp, sb);
         }
 

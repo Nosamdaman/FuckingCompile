@@ -299,12 +299,46 @@ namespace jfc {
             return res;
         }
 
-        public string Expression() {
+        /// <summary> Inverts an integer </summary>
+        public string ExpressionInv(string reg, int size) {
             StringBuilder sb = GetBuilder();
-            string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: Expression");
-            sb.AppendLine($" ; Expression");
-            return result;
+            string res = GetNextTemp();
+
+            // If we don't have a vector, this is simple
+            if (size == 0) {
+                sb.AppendLine($"\t{res} = xor i32 {reg}, -1 ; Invert integer");
+            } else {
+                string dt = GetDataType(DataType.INTEGER, size);
+                sb.Append($"\t{res} = xor {dt} {reg}, < i32 -1");
+                size--;
+                while (size > 0) { sb.Append(", i32 -1"); size--; }
+                sb.AppendLine(" > ; Invert integers");
+            }
+
+            return res;
+        }
+
+        /// <summary> Performs a bitwise operation on two integers </summary>
+        public string Expression(TokenType operation, string l, string r, int lSize, int rSize) {
+            StringBuilder sb = GetBuilder();
+            string res;
+            string op = operation switch {
+                TokenType.AND => "and",
+                TokenType.OR => "or",
+                _ => throw new System.Exception("How the fuck did you even get here?")
+            };
+            if (lSize == rSize) {
+                res = GetNextTemp();
+                string dt = GetDataType(DataType.INTEGER, lSize);
+                sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Bitwise operation");
+            } else if (lSize != 0) {
+                sb.AppendLine("\t; Bitwise operation on a vector and a scalar");
+                res = VectorScalarOp(l, r, op, DataType.INTEGER, lSize);
+            } else {
+                sb.AppendLine("\t; Bitwise operation a scalar and a vector");
+                res = ScalarVectorOp(r, l, op, DataType.INTEGER, rSize);
+            }
+            return res;
         }
 
         /// <summary> Gets the currently active string builder </summary>
