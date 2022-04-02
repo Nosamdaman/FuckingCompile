@@ -32,7 +32,7 @@ namespace jfc {
         private ParseInfo AssignmentStatement() {
             ParseInfo status;
 
-            _translator.Comment("\n\t; Begin assignment statement");
+            _translator.Comment("\t; Begin assignment statement");
 
             // We first need an identifier
             if (_curToken.TokenType != TokenType.IDENTIFIER) {

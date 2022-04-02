@@ -42,4 +42,11 @@ i3 := 2.3 + 2.8;
 
 result := DumpState();
 
+i0 := not 0;
+i1 := 256 | 128 | 64 | 32 | 16 | 8 | 4 | 2 | 1;
+i2 := 64 | 8 & i1;
+i3 := not i2;
+
+result := DumpState();
+
 end program .

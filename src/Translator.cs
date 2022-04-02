@@ -99,7 +99,7 @@ namespace jfc {
         /// <param name="procedure"> The procedure to be translated </param>
         public void FinishProcedure(Symbol procedure) {
             StringBuilder sb = _procedures.Pop();
-            sb.AppendLine($"\tret {GetDefaultValue(procedure)}");
+            sb.AppendLine($"\t; Return successfully\n\tret {GetDefaultValue(procedure)}");
             sb.AppendLine("}");
             _finishedProcedures.AppendLine(sb.ToString());
         }
@@ -388,7 +388,7 @@ namespace jfc {
             StringBuilder sb = GetBuilder();
             string dt = GetDataType(target);
             string src = target.AssemblyName;
-            sb.AppendLine($"\tstore {dt} {reg}, {dt}* {src} ; Update variable \"{target.Name}\"");
+            sb.AppendLine($"\tstore {dt} {reg}, {dt}* {src} ; Update variable \"{target.Name}\"\n");
         }
 
         /// <summary> Gets the currently active string builder </summary>
