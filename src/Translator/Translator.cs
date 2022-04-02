@@ -313,7 +313,7 @@ namespace jfc {
             return $"<{arraySize} x {dt}>";
         }
 
-        private string VectorScalarOp(string vec, string reg, string op, DataType dataType, int arraySize) {
+        private string VectorScalarOp(string vec, string reg, string op, DataType dataType, int arraySize, string msg) {
             StringBuilder sb = GetBuilder();
             string dt = GetDataType(dataType, 0);
             string dtv = GetDataType(dataType, arraySize);
@@ -324,13 +324,15 @@ namespace jfc {
                 string tmp1 = GetNextTemp();
                 sb.AppendLine($"\t{tmp1} = {op} {dt} {tmp0}, {reg}");
                 string tmp2 = GetNextTemp();
-                sb.AppendLine($"\t{tmp2} = insertelement {dtv} {res}, {dt} {tmp1}, i32 {idx}");
+                sb.Append($"\t{tmp2} = insertelement {dtv} {res}, {dt} {tmp1}, i32 {idx}");
+                if (idx != arraySize - 1) sb.Append('\n');
                 res = tmp2;
             }
+            sb.AppendLine(" ; " + msg);
             return res;
         }
 
-        private string ScalarVectorOp(string vec, string reg, string op, DataType dataType, int arraySize) {
+        private string ScalarVectorOp(string vec, string reg, string op, DataType dataType, int arraySize, string msg) {
             StringBuilder sb = GetBuilder();
             string dt = GetDataType(dataType, 0);
             string dtv = GetDataType(dataType, arraySize);
@@ -341,9 +343,11 @@ namespace jfc {
                 string tmp1 = GetNextTemp();
                 sb.AppendLine($"\t{tmp1} = {op} {dt} {reg}, {tmp0}");
                 string tmp2 = GetNextTemp();
-                sb.AppendLine($"\t{tmp2} = insertelement {dtv} {res}, {dt} {tmp1}, i32 {idx}");
+                sb.Append($"\t{tmp2} = insertelement {dtv} {res}, {dt} {tmp1}, i32 {idx}");
+                if (idx != arraySize - 1) sb.Append('\n');
                 res = tmp2;
             }
+            sb.AppendLine(" ; " + msg);
             return res;
         }
     }

@@ -68,11 +68,9 @@ namespace jfc {
                 string dt = GetDataType(dataType, lSize);
                 sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Multiply");
             } else if (lSize != 0) {
-                sb.AppendLine("\t; Multiply a vector by a scalar");
-                res = VectorScalarOp(l, r, op, dataType, lSize);
+                res = VectorScalarOp(l, r, op, dataType, lSize, "Multiply a vector by a scalar");
             } else {
-                sb.AppendLine("\t; Multiply a scalar by a vector");
-                res = ScalarVectorOp(r, l, op, dataType, rSize);
+                res = ScalarVectorOp(r, l, op, dataType, rSize, "Multiply a scalar by a vector");
             }
             return res;
         }
@@ -107,11 +105,9 @@ namespace jfc {
                 string dt = GetDataType(dataType, lSize);
                 sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Compare");
             } else if (lSize != 0) {
-                sb.AppendLine("\t; Compare a vector to a scalar");
-                res = VectorScalarOp(l, r, op, dataType, lSize);
+                res = VectorScalarOp(l, r, op, dataType, lSize, "Compare a vector to a scalar");
             } else {
-                sb.AppendLine("\t; Compare a scalar to a vector");
-                res = ScalarVectorOp(r, l, op, dataType, rSize);
+                res = ScalarVectorOp(r, l, op, dataType, rSize, "Compare a scalar to a vector");
             }
             return res;
         }
@@ -141,11 +137,9 @@ namespace jfc {
                 string dt = GetDataType(dataType, lSize);
                 sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Add");
             } else if (lSize != 0) {
-                sb.AppendLine("\t; Add a vector and a scalar");
-                res = VectorScalarOp(l, r, op, dataType, lSize);
+                res = VectorScalarOp(l, r, op, dataType, lSize, "Add a vector and a scalar");
             } else {
-                sb.AppendLine("\t; Add a scalar and a vector");
-                res = ScalarVectorOp(r, l, op, dataType, rSize);
+                res = ScalarVectorOp(r, l, op, dataType, rSize, "Add a scalar and a vector");
             }
             return res;
         }
@@ -183,11 +177,9 @@ namespace jfc {
                 string dt = GetDataType(DataType.INTEGER, lSize);
                 sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Bitwise operation");
             } else if (lSize != 0) {
-                sb.AppendLine("\t; Bitwise operation on a vector and a scalar");
-                res = VectorScalarOp(l, r, op, DataType.INTEGER, lSize);
+                res = VectorScalarOp(l, r, op, DataType.INTEGER, lSize, "Bitwise operation on a vector and a scalar");
             } else {
-                sb.AppendLine("\t; Bitwise operation a scalar and a vector");
-                res = ScalarVectorOp(r, l, op, DataType.INTEGER, rSize);
+                res = ScalarVectorOp(r, l, op, DataType.INTEGER, rSize, "Bitwise operation a scalar and a vector");
             }
             return res;
         }
