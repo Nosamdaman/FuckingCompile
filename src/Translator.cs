@@ -4,7 +4,7 @@ using System.Text;
 namespace jfc {
     /// <summary> Class responsible for translating the source code to LLVM IR </summary>
     public class Translator {
-        private int _tempCount = 0;
+        private int _tempCount = 1;
         private int _globalCount = 0;
         private int _localCount = 0;
         private int _procedureCount = 0;
@@ -206,7 +206,11 @@ namespace jfc {
         public static string FactorConstInt(int value) => value.ToString();
 
         /// <summary> Translates a constant floating-point number into assembly </summary>
-        public static string FactorConstFloat(double value) => value.ToString();
+        public static string FactorConstFloat(double value) {
+            float f = (float) value;
+            int i = System.BitConverter.SingleToInt32Bits(f);
+            return "0x" + i.ToString("x8") + "00000000";
+        }
 
         /// <summary> Translates a constant string into assembly </summary>
         public string FactorConstString(string value) {
@@ -503,7 +507,7 @@ namespace jfc {
                 string tmp1 = GetNextTemp();
                 sb.AppendLine($"\t{tmp1} = {op} {dt} {tmp0}, {reg}");
                 string tmp2 = GetNextTemp();
-                sb.AppendLine($"\t{tmp2} = insertelement {dtv} {res}, i32 {tmp1}, i32 {idx}");
+                sb.AppendLine($"\t{tmp2} = insertelement {dtv} {res}, {dt} {tmp1}, i32 {idx}");
                 res = tmp2;
             }
             return res;
@@ -520,7 +524,7 @@ namespace jfc {
                 string tmp1 = GetNextTemp();
                 sb.AppendLine($"\t{tmp1} = {op} {dt} {reg}, {tmp0}");
                 string tmp2 = GetNextTemp();
-                sb.AppendLine($"\t{tmp2} = insertelement {dtv} {res}, i32 {tmp1}, i32 {idx}");
+                sb.AppendLine($"\t{tmp2} = insertelement {dtv} {res}, {dt} {tmp1}, i32 {idx}");
                 res = tmp2;
             }
             return res;
