@@ -198,11 +198,19 @@ namespace jfc {
         }
 
         /// <summary> Updates the value for a variable </summary>
-        public void Assignment(Symbol target, string reg) {
+        public void Assignment(Symbol target, string reg, string idx) {
             StringBuilder sb = GetBuilder();
             string dt = GetDataType(target);
             string src = target.AssemblyName;
-            sb.AppendLine($"\tstore {dt} {reg}, {dt}* {src} ; Update variable \"{target.Name}\"\n");
+            if (idx == null) {
+                sb.AppendLine($"\tstore {dt} {reg}, {dt}* {src} ; Update variable \"{target.Name}\"\n");
+            } else {
+                string vec = VariableReference(target);
+                string res = GetNextTemp();
+                string dti = GetDataType(target.DataType, 0);
+                sb.AppendLine($"\t{res} = insertelement {dt} {vec}, {dti} {reg}, i32 {idx} ; Update at index");
+                sb.AppendLine($"\tstore {dt} {res}, {dt}* {src} ; Update variable \"{target.Name}\"\n");
+            }
         }
 
         /// <summary> Translates the header to an if statement to assembly </summary>
@@ -237,6 +245,34 @@ namespace jfc {
             StringBuilder sb = GetBuilder();
             sb.AppendLine("\t; End if clause");
             sb.AppendLine($"\tbr label {lblEnd}\n");
+            BasicBlock(lblEnd);
+        }
+
+        /// <summary> Starts a loop </summary>
+        public string ForBegin() {
+            StringBuilder sb = GetBuilder();
+            string lblCond = GetNextBasicBlock();
+            sb.AppendLine("\t; Begin loop conditional");
+            sb.AppendLine($"\tbr label {lblCond}\n");
+            BasicBlock(lblCond);
+            return lblCond;
+        }
+
+        /// <summary> Transition from the loop conditional to the body </summary>
+        public string ForBody(string cond) {
+            StringBuilder sb = GetBuilder();
+            string lblBody = GetNextBasicBlock();
+            string lblEnd = GetNextBasicBlock();
+            sb.AppendLine($"\tbr i1 {cond}, label {lblBody}, label {lblEnd} ; Evaluate loop conditional\n");
+            BasicBlock(lblBody);
+            return lblEnd;
+        }
+
+        /// <summary> End for-loop </summary>
+        public void ForEnd(string lblCond, string lblEnd) {
+            StringBuilder sb = GetBuilder();
+            sb.AppendLine("\t; Go back to the loop conditional");
+            sb.AppendLine($"\tbr label {lblCond}\n");
             BasicBlock(lblEnd);
         }
 

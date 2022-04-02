@@ -1,9 +1,11 @@
 program Branching is
 
 variable result : bool;
+variable intM : integer[5];
 
 procedure TestBranching : bool (variable cond : bool)
 variable result : bool;
+variable idx : integer;
 begin
 
 result := putString("Test Branching:\n");
@@ -18,12 +20,27 @@ else
     result := putString("If-Else False\n");
 end if;
 
+result := putString("[");
+result := putInteger(intM[0]);
+for (idx := 1; idx < 5)
+    result := putString(", ");
+    result := putInteger(intM[idx]);
+    idx := idx + 1;
+end for;
+result := putString("]\n");
+
 end procedure;
 
 begin
 
 result := TestBranching(false);
 result := putString("\n");
+intM[0] := 1;
+intM[1] := 2;
+intM[2] := 3;
+intM[3] := 4;
+intM[4] := 5;
+intM := intM * (intM - 1);
 result := TestBranching(true);
 
 end program .

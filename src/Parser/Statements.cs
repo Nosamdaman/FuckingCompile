@@ -50,12 +50,13 @@ namespace jfc {
                 _src.Report(MsgLevel.ERROR, "Assignment statements must begin with a variable reference", true);
                 return new(false);
             }
-            status = VariableReference(symbol);
+            status = VariableAssignment(symbol);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected a valid variable reference", true);
                 return new(false);
             }
             (DataType eDataType, int eArraySize) = ((DataType, int)) status.Data;
+            string idx = status.Reg;
 
             // Next we need an assignment sign
             if (_curToken.TokenType != TokenType.ASSIGN) {
@@ -100,7 +101,7 @@ namespace jfc {
             }
 
             // Perform the assignment
-            _translator.Assignment(symbol, reg);
+            _translator.Assignment(symbol, reg, idx);
 
             _src.Report(MsgLevel.TRACE, "Parsed assignment statement", true);
             return new(true);
@@ -232,6 +233,10 @@ namespace jfc {
                 return new(false);
             }
             NextToken();
+
+            // Now we enter the conditional block
+            string lblCond = _translator.ForBegin();
+
             status = Expression();
             (DataType dataType, int arraySize) = ((DataType, int)) status.Data;
             if ((dataType != DataType.BOOL && dataType != DataType.INTEGER) || arraySize != 0) {
@@ -248,12 +253,20 @@ namespace jfc {
             }
             NextToken();
 
+            // Now transition to the loop body
+            string cond = status.Reg;
+            if (dataType == DataType.INTEGER) cond = _translator.IntToBool(cond, arraySize);
+            string lblEnd = _translator.ForBody(cond);
+
             // Now we accept statements until the end
             status = StatementList(new[] { TokenType.END_RW, TokenType.EOF }, returnType);
             if (!status.Success) {
                 _src.Report(MsgLevel.DEBUG, "Expected a statement list after \")\"", true);
                 return new(false);
             }
+
+            // We can now finish the loop
+            _translator.ForEnd(lblCond, lblEnd);
 
             // Now we expect the final two keywords
             if (_curToken.TokenType != TokenType.END_RW) {
@@ -307,6 +320,51 @@ namespace jfc {
             // We should be good to go
             _src.Report(MsgLevel.TRACE, "Parsed return statement", true);
             return new(true);
+        }
+
+        private ParseInfo VariableAssignment(Symbol variable) {
+            // We'll assume that we're on the current variable and just move on
+            NextToken();
+
+            // Get information about the variable
+            DataType dataType = variable.DataType;
+            int arraySize = 0;
+            if (variable.IsArray) arraySize = variable.ArraySize;
+
+            // Now we'll check for indexing
+            if (_curToken.TokenType != TokenType.L_BRACKET) {
+                return new(true, (dataType, arraySize));
+            }
+
+            // We'll error if the variable isn't an array
+            if (!variable.IsArray) {
+                _src.Report(MsgLevel.ERROR, "Cannot index a non-array variable", true);
+                return new(false);
+            }
+            NextToken();
+
+            // Now we check the bounds
+            ParseInfo status = Expression();
+            if (!status.Success) {
+                _src.Report(MsgLevel.DEBUG, "Expression expected after \"[\"", true);
+                return new(false);
+            }
+            (DataType boundDataType, int boundArraySize) = ((DataType, int)) status.Data;
+            if (boundDataType != DataType.INTEGER || boundArraySize != 0) {
+                _src.Report(MsgLevel.ERROR, "Bounds must be scalar integers", true);
+                return new(false);
+            }
+            string idx = status.Reg;
+
+            // Finally we expect a closing bracket
+            if (_curToken.TokenType != TokenType.R_BRACKET) {
+                _src.Report(MsgLevel.ERROR, "\"]\" expected after expression", true);
+                return new(false);
+            }
+            NextToken();
+
+            // We should be good to go
+            return new(true, (dataType, 0), idx);
         }
     }
 }
