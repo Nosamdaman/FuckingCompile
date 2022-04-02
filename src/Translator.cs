@@ -274,12 +274,29 @@ namespace jfc {
             return result;
         }
 
-        public string ArithOp() {
+        /// <summary> Adds or subracts two values </summary>
+        public string ArithOp(TokenType operation, string l, string r, DataType dataType, int lSize, int rSize) {
             StringBuilder sb = GetBuilder();
-            string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: Aritmetic operations");
-            sb.AppendLine($" ; Aritmetic operation");
-            return result;
+            string res;
+            string op = (operation, dataType) switch {
+                (TokenType.PLUS, DataType.INTEGER) => "add",
+                (TokenType.MINUS, DataType.INTEGER) => "sub",
+                (TokenType.PLUS, DataType.FLOAT) => "fadd",
+                (TokenType.MINUS, DataType.FLOAT) => "fsub",
+                _ => throw new System.Exception("How the fuck did you even get here?")
+            };
+            if (lSize == rSize) {
+                res = GetNextTemp();
+                string dt = GetDataType(dataType, lSize);
+                sb.AppendLine($"\t{res} = {op} {dt} {l}, {r} ; Add");
+            } else if (lSize != 0) {
+                sb.AppendLine("\t; Add a vector and a scalar");
+                res = VectorScalarOp(l, r, op, dataType, lSize);
+            } else {
+                sb.AppendLine("\t; Add a scalar and a vector");
+                res = ScalarVectorOp(r, l, op, dataType, rSize);
+            }
+            return res;
         }
 
         public string Expression() {
