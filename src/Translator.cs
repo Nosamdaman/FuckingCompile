@@ -101,6 +101,12 @@ namespace jfc {
             _finishedProcedures.AppendLine(sb.ToString());
         }
 
+        /// <summary> Writes a comment </summary>
+        public void Comment(string msg) {
+            StringBuilder sb = GetBuilder();
+            sb.AppendLine(msg);
+        }
+
         /// <summary> Casts an integer to a floating-point value </summary>
         public string IntToFloat(string reg, int arraySize) {
             StringBuilder sb = GetBuilder();
@@ -111,12 +117,40 @@ namespace jfc {
             return res;
         }
 
-        public string BoolToInt() {
+        /// <summary> Casts a floating-point to an integer </summary>
+        public string FloatToInt(string reg, int size) {
             StringBuilder sb = GetBuilder();
-            string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: Bool to Int");
-            sb.AppendLine($" ; Cast boolean to integer");
-            return result;
+            string res = GetNextTemp();
+            string dtf = GetDataType(DataType.FLOAT, size);
+            string dti = GetDataType(DataType.INTEGER, size);
+            sb.AppendLine($"\t{res} = fptosi {dtf} {reg} to {dti} ; Cast float to int");
+            return res;
+        }
+
+        /// <summary> Casts a boolean to an integer </summary>
+        public string BoolToInt(string reg, int size) {
+            StringBuilder sb = GetBuilder();
+            string res = GetNextTemp();
+            string dtb = GetDataType(DataType.BOOL, size);
+            string dti = GetDataType(DataType.INTEGER, size);
+            sb.AppendLine($"\t{res} = zext {dtb} {reg} to {dti} ; Cast bool to int");
+            return res;
+        }
+
+        /// <summary> Casts an integer to a boolean </summary>
+        public string IntToBool(string reg, int size) {
+            StringBuilder sb = GetBuilder();
+            string res = GetNextTemp();
+            if (size == 0) {
+                sb.AppendLine($"\t{res} = icmp ne i32 {reg}, 0 ; Cast bool to int");
+            } else {
+                string dt = GetDataType(DataType.INTEGER, size);
+                sb.Append($"\t{res} = icmp ne {dt} {reg}, < i32 0");
+                size--;
+                while (size > 0) { sb.Append(", i32 0"); size--; }
+                sb.AppendLine(" > ; Cast bool to int");
+            }
+            return res;
         }
 
         /// <summary> Translates a variable reference to assembly </summary>
@@ -339,6 +373,14 @@ namespace jfc {
                 res = ScalarVectorOp(r, l, op, DataType.INTEGER, rSize);
             }
             return res;
+        }
+
+        /// <summary> Updates the value for a variable </summary>
+        public void Assignment(Symbol target, string reg) {
+            StringBuilder sb = GetBuilder();
+            string dt = GetDataType(target);
+            string src = target.AssemblyName;
+            sb.AppendLine($"\tstore {dt} {reg}, {dt}* {src} ; Update variable \"{target.Name}\"");
         }
 
         /// <summary> Gets the currently active string builder </summary>

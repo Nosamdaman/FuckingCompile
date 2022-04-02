@@ -323,10 +323,10 @@ namespace jfc {
             DataType dt = lDataType > rDataType ? lDataType : rDataType;
             if (dt == DataType.INTEGER) {
                 if (lDataType == DataType.BOOL) {
-                    lReg = _translator.BoolToInt();
+                    lReg = _translator.BoolToInt(lReg, lArraySize);
                 }
                 if (rDataType == DataType.BOOL) {
-                    rReg = _translator.BoolToInt();
+                    rReg = _translator.BoolToInt(rReg, rArraySize);
                 }
             } else if (dt == DataType.FLOAT) {
                 if (lDataType == DataType.INTEGER) {

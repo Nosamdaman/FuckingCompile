@@ -32,6 +32,8 @@ namespace jfc {
         private ParseInfo AssignmentStatement() {
             ParseInfo status;
 
+            _translator.Comment("\n\t; Begin assignment statement");
+
             // We first need an identifier
             if (_curToken.TokenType != TokenType.IDENTIFIER) {
                 _src.Report(MsgLevel.ERROR, "Expected an identifier as a destination", true);
@@ -84,6 +86,21 @@ namespace jfc {
                 _src.Report(MsgLevel.ERROR, $"Array size mismatch between \"{eArraySize}\" and \"{aArraySize}\"", true);
                 return new(false);
             }
+
+            // Perform any conversions
+            string reg = status.Reg;
+            if (eDataType == DataType.BOOL && aDataType == DataType.INTEGER) {
+                reg = _translator.IntToBool(reg, aArraySize);
+            } else if (eDataType == DataType.INTEGER && aDataType == DataType.BOOL) {
+                reg = _translator.BoolToInt(reg, aArraySize);
+            } else if (eDataType == DataType.INTEGER && aDataType == DataType.FLOAT) {
+                reg = _translator.FloatToInt(reg, aArraySize);
+            } else if (eDataType == DataType.FLOAT && aDataType == DataType.INTEGER) {
+                reg = _translator.IntToFloat(reg, aArraySize);
+            }
+
+            // Perform the assignment
+            _translator.Assignment(symbol, reg);
 
             _src.Report(MsgLevel.TRACE, "Parsed assignment statement", true);
             return new(true);
