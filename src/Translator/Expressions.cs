@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 
 namespace jfc {
     /// <summary> Class responsible for translating the source code to LLVM IR </summary>
@@ -26,7 +27,8 @@ namespace jfc {
         public string FactorConstString(string value) {
             StringBuilder sb = GetBuilder();
             string str = GetNextTemp();
-            int l = value.Length + 1;
+            int escapeCount = value.Count(c => c == '\\');
+            int l = value.Length - (escapeCount * 2) + 1;
             sb.AppendLine($"\t{str} = alloca [{l} x i8] ; String constant");
             sb.AppendLine($"\tstore [{l} x i8] c\"{value}\\00\", [{l} x i8]* {str} ; String value");
             string ptr = GetNextTemp();

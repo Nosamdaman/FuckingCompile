@@ -10,24 +10,19 @@ procedure DumpState : bool ()
 variable result : bool;
 begin
 
-result := putString("State:
-");
+result := putString("State:\n");
 result := putString("| i0: ");
 result := putInteger(i0);
-result := putString("
-");
+result := putString("\n");
 result := putString("| i1: ");
 result := putInteger(i1);
-result := putString("
-");
+result := putString("\n");
 result := putString("| i2: ");
 result := putInteger(i2);
-result := putString("
-");
+result := putString("\n");
 result := putString("| i3: ");
 result := putInteger(i3);
-result := putString("
-");
+result := putString("\n");
 
 end procedure;
 

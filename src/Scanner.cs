@@ -112,6 +112,30 @@ namespace jfc {
                     switch (cur) {
                     case -1:
                         return new(TokenType.EOF);
+                    case '\\':
+                        int next = _src.Read();
+                        switch (next) {
+                        case -1:
+                            return new(TokenType.EOF);
+                        case '\\':
+                            sb.Append("\\5C");
+                            break;
+                        case 'n':
+                            sb.Append("\\0A");
+                            break;
+                        case 't':
+                            sb.Append("\\09");
+                            break;
+                        case '"':
+                            sb.Append("\\22");
+                            break;
+                        default:
+                            _src.Report(MsgLevel.WARN, $"Unknown escape sequence \"\\{(char) next}\"", true);
+                            sb.Append("\\5C");
+                            sb.Append((char) next);
+                            break;
+                        }
+                        break;
                     case '"':
                         endOfString = true;
                         break;
