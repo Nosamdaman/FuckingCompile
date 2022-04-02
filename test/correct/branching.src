@@ -1,0 +1,29 @@
+program Branching is
+
+variable result : bool;
+
+procedure TestBranching : bool (variable cond : bool)
+variable result : bool;
+begin
+
+result := putString("Test Branching:\n");
+
+if (cond) then
+    result := putString("If True\n");
+end if;
+
+if (cond) then
+    result := putString("If-Else True\n");
+else
+    result := putString("If-Else False\n");
+end if;
+
+end procedure;
+
+begin
+
+result := TestBranching(false);
+result := putString("\n");
+result := TestBranching(true);
+
+end program .

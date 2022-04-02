@@ -7,6 +7,7 @@ namespace jfc {
         private int _globalCount = 0;
         private int _localCount = 0;
         private int _procedureCount = 0;
+        private int _basicBlockCount = 0;
         private readonly StringBuilder _globals = new();
         private readonly StringBuilder _mainHeader = new();
         private readonly StringBuilder _mainBody = new();
@@ -204,6 +205,48 @@ namespace jfc {
             sb.AppendLine($"\tstore {dt} {reg}, {dt}* {src} ; Update variable \"{target.Name}\"\n");
         }
 
+        /// <summary> Translates the header to an if statement to assembly </summary>
+        public (string, string) IfHeader(string cond) {
+            StringBuilder sb = GetBuilder();
+            string lblThen = GetNextBasicBlock();
+            string lblNext = GetNextBasicBlock();
+            sb.AppendLine($"\tbr i1 {cond}, label {lblThen}, label {lblNext} ; Evaluate if statement condition\n");
+            return (lblThen, lblNext);
+        }
+
+        /// <summary> Transitions from the then to the else clause </summary>
+        public string IfElseTransition(string lblElse) {
+            StringBuilder sb = GetBuilder();
+            string lblEnd = GetNextBasicBlock();
+            sb.AppendLine("\t; End then clause");
+            sb.AppendLine($"\tbr label {lblEnd}\n");
+            BasicBlock(lblElse);
+            return lblEnd;
+        }
+
+        /// <summary> Finishes an if-else statement </summary>
+        public void IfElseEnd(string lblEnd) {
+            StringBuilder sb = GetBuilder();
+            sb.AppendLine("\t; End else clause");
+            sb.AppendLine($"\tbr label {lblEnd}\n");
+            BasicBlock(lblEnd);
+        }
+
+        /// <summary> Finishes an if statemene </summary>
+        public void IfEnd(string lblEnd) {
+            StringBuilder sb = GetBuilder();
+            sb.AppendLine("\t; End if clause");
+            sb.AppendLine($"\tbr label {lblEnd}\n");
+            BasicBlock(lblEnd);
+        }
+
+        /// <summary> Creates a new basic block </summary>
+        public void BasicBlock(string lbl) {
+            StringBuilder sb = GetBuilder();
+            sb.AppendLine($"\t; Begin new basic block");
+            sb.AppendLine($"\t{lbl[1..]}:\n");
+        }
+
         /// <summary> Gets the currently active string builder </summary>
         /// <returns> The currently active string builder </returns>
         private StringBuilder GetBuilder() {
@@ -278,6 +321,14 @@ namespace jfc {
         private string GetNextProcedure() {
             string prefix = $"@p{_procedureCount}-";
             _procedureCount++;
+            return prefix;
+        }
+
+        /// <summary> Gets a the name of a new basic block </summary>
+        /// <returns> The name of a new basic block </returns>
+        private string GetNextBasicBlock() {
+            string prefix = $"%lbl{_basicBlockCount}";
+            _basicBlockCount++;
             return prefix;
         }
 

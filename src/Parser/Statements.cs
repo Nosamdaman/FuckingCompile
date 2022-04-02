@@ -120,6 +120,8 @@ namespace jfc {
             }
             NextToken();
 
+            _translator.Comment("\t; Begin if statement");
+
             // Then we need the conditional statement
             if (_curToken.TokenType != TokenType.L_PAREN) {
                 _src.Report(MsgLevel.ERROR, "Expected \"(\" after \"IF\"", true);
@@ -142,12 +144,20 @@ namespace jfc {
             }
             NextToken();
 
+            // Translate the statement header
+            string cond = status.Reg;
+            if (dataType == DataType.INTEGER) cond = _translator.IntToBool(cond, 0);
+            (string lblThen, string lblNext) = _translator.IfHeader(cond);
+
             // Then we reach the then clause
             if (_curToken.TokenType != TokenType.THEN_RW) {
                 _src.Report(MsgLevel.ERROR, "Expected \"THEN\" after \")\"", true);
                 return new(false);
             }
             NextToken();
+
+            // Begin the then clause
+            _translator.BasicBlock(lblThen);
 
             // Next we'll read statements until we reach the else or end
             status = StatementList(new[] { TokenType.ELSE_RW, TokenType.END_RW, TokenType.EOF }, returnType);
@@ -158,6 +168,9 @@ namespace jfc {
 
             // We might have an else block
             if (_curToken.TokenType == TokenType.ELSE_RW) {
+                // First we need to finish the then clause
+                string lblEnd = _translator.IfElseTransition(lblNext);
+
                 // Next we'll read statements until we reach the end
                 NextToken();
                 status = StatementList(new[] { TokenType.END_RW, TokenType.EOF }, returnType);
@@ -165,6 +178,11 @@ namespace jfc {
                     _src.Report(MsgLevel.DEBUG, "Expected statement list after \"ELSE\"", true);
                     return new(false);
                 }
+
+                // Now we finish the statement
+                _translator.IfElseEnd(lblEnd);
+            } else {
+                _translator.IfEnd(lblNext);
             }
 
             // Now we should be at the end of the statement
