@@ -140,8 +140,9 @@ namespace jfc {
             // Try to open the indicated file
             SourceFileReader src;
             try {
-                src = new(sourceFile);
-                src.MinReportLevel = verbosity;
+                src = new(sourceFile); {
+                    src.MinReportLevel = verbosity;
+                }
             } catch (Exception) {
                 Environment.ExitCode = 1;
                 return;
