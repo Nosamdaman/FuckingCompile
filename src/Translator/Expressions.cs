@@ -24,7 +24,7 @@ namespace jfc {
         }
 
         /// <summary> Translates a constant string into assembly </summary>
-        public string FactorConstString(string value) {
+        public static string FactorConstString(string value) {
             StringBuilder sb = new();
             int escapeCount = value.Count(c => c == '\\');
             int padding = 128 - (value.Length - (escapeCount * 2));
