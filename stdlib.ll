@@ -59,8 +59,11 @@ define private i1 @putFloat(float %float) {
 }
 
 ; Writes a string
-define private i1 @putString(i8* %str) {
-    %retInt = call i32 (i8*, ...) @printf(i8* %str)
+define private i1 @putString([128 x i8] %str) {
+    %mem = alloca [128 x i8]
+    store [128 x i8] %str, [128 x i8]* %mem
+    %ptr = getelementptr [128 x i8], [128 x i8]* %mem, i32 0, i32 0
+    %retInt = call i32 (i8*, ...) @printf(i8* %ptr)
     %ret = icmp sge i32 %retInt, 0
     ret i1 %ret
 }

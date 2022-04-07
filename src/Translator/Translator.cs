@@ -389,7 +389,7 @@ namespace jfc {
                 DataType.BOOL => "i1",
                 DataType.INTEGER => "i32",
                 DataType.FLOAT => "float",
-                DataType.STRING => "i8*",
+                DataType.STRING => "[128 x i8]",
                 _ => throw new System.Exception("How the fuck did you get here?")
             };
 

@@ -25,15 +25,16 @@ namespace jfc {
 
         /// <summary> Translates a constant string into assembly </summary>
         public string FactorConstString(string value) {
-            StringBuilder sb = GetBuilder();
-            string str = GetNextTemp();
+            StringBuilder sb = new();
             int escapeCount = value.Count(c => c == '\\');
-            int l = value.Length - (escapeCount * 2) + 1;
-            sb.AppendLine($"\t{str} = alloca [{l} x i8] ; String constant");
-            sb.AppendLine($"\tstore [{l} x i8] c\"{value}\\00\", [{l} x i8]* {str} ; String value");
-            string ptr = GetNextTemp();
-            sb.AppendLine($"\t{ptr} = getelementptr [{l} x i8], [{l} x i8]* {str}, i32 0, i32 0 ; String pointer");
-            return ptr;
+            int padding = 128 - (value.Length - (escapeCount * 2));
+            sb.Append($"c\"{value}");
+            while (padding > 0) {
+                sb.Append("\\00");
+                padding--;
+            }
+            sb.AppendLine("\"");
+            return sb.ToString();
         }
 
         /// <summary> Inverts an integer </summary>

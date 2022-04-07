@@ -61,8 +61,11 @@ namespace jfc {
         "}\n" +
         "\n" +
         "; Writes a string\n" +
-        "define private i1 @putString(i8* %str) {\n" +
-        "    %retInt = call i32 (i8*, ...) @printf(i8* %str)\n" +
+        "define private i1 @putString([128 x i8] %str) {\n" +
+        "    %mem = alloca [128 x i8]\n" +
+        "    store [128 x i8] %str, [128 x i8]* %mem\n" +
+        "    %ptr = getelementptr [128 x i8], [128 x i8]* %mem, i32 0, i32 0\n" +
+        "    %retInt = call i32 (i8*, ...) @printf(i8* %ptr)\n" +
         "    %ret = icmp sge i32 %retInt, 0\n" +
         "    ret i1 %ret\n" +
         "}\n" +
