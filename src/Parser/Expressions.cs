@@ -578,7 +578,7 @@ namespace jfc {
 
             // We can accept strings
             if (_curToken.TokenType == TokenType.STRING) {
-                tmp = _translator.FactorConstString((string) _curToken.TokenMark);
+                tmp = Translator.FactorConstString((string) _curToken.TokenMark);
                 NextToken();
                 _src.Report(MsgLevel.TRACE, "Parsed factor as string literal", true);
                 return new(true, (DataType.STRING, 0), tmp);
