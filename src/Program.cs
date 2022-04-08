@@ -147,8 +147,8 @@ namespace jfc {
                 using Process process = new();
                 process.StartInfo.FileName = "clang";
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.ArgumentList.Add("--version");
                 process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.ArgumentList.Add("--version");
                 process.Start();
                 string version = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
@@ -170,6 +170,7 @@ namespace jfc {
             Console.WriteLine("Just Fucking Compile " + _versionText);
             Console.WriteLine($"| Source File        : {sourceFile}");
             Console.WriteLine($"| Output File        : {outputFile}");
+            Console.WriteLine($"| Dump Assembly      : {(dumpAssembly ? "True" : "False")}");
             Console.WriteLine($"| Verbosity          : {verbosity}");
             Console.WriteLine($"| Clang Version      : {clangVersion}");
             Console.WriteLine($"| Clang Target       : {clangTarget}");
@@ -188,21 +189,41 @@ namespace jfc {
             }
 
             // We'll run the parser
-            Parser parser = new(src);
+            Parser parser = new(src, clangTarget);
             ParseInfo status = parser.Program();
 
             // Finish up
-            if (!status.Success) {
+            if (!status.Success || !src.CanCompile) {
                 src.Report(MsgLevel.ERROR, "Unable to successfully parse the program, aborting execution");
                 Environment.ExitCode = 1;
                 src.Dispose();
                 return;
             }
 
-            // Now we write the result if desired
+            // Now we compile the program
+            string assemblyFile;
             if (dumpAssembly) {
-                string output = (string) status.Data;
-                File.WriteAllText(outputFile + ".ll", output);
+                // string output = (string) status.Data;
+                // File.WriteAllText(outputFile + ".ll", output);
+                assemblyFile = outputFile + ".ll";
+            } else {
+                assemblyFile = Path.GetTempFileName();
+            }
+            File.WriteAllText(assemblyFile, (string) status.Data);
+            try {
+                using Process process = new();
+                process.StartInfo.FileName = "clang";
+                process.StartInfo.ArgumentList.Add("-o");
+                process.StartInfo.ArgumentList.Add(outputFile);
+                process.StartInfo.ArgumentList.Add(assemblyFile);
+                process.Start();
+                process.WaitForExit();
+            } catch (System.ComponentModel.Win32Exception) {
+                Console.WriteLine("ERROR: Compilation failed");
+                Environment.ExitCode = 1;
+            }
+            if (!dumpAssembly) {
+                File.Delete(assemblyFile);
             }
 
             // Close the file

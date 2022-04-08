@@ -35,16 +35,20 @@ namespace jfc {
         private Token _curToken = null;
         private readonly Dictionary<string, Symbol> _global = new(new StringNoCaseComparer());
         private readonly Stack<Dictionary<string, Symbol>> _local = new();
-        private readonly Translator _translator = new();
+        private readonly Translator _translator;
 
         /// <summary> Creates a new parser on the given file </summary>
-        /// <param name="src"> The  source code </param>
+        /// <param name="src"> The source code </param>
+        /// <param name="target"> The target machine for compilation </param>
         /// <exception cref="ArgumentNullException"/>
-        public Parser(SourceFileReader src) {
+        public Parser(SourceFileReader src, string target) {
             // Add the scanner and get the first symbol
             _src = src;
             _scanner = new Scanner(src);
             NextToken();
+
+            // Create the translator
+            _translator = new(target);
 
             // Seed the global symbol table with reserved procedures
             Symbol getBool = Symbol.Procedure("GETBOOL", DataType.BOOL, null);
