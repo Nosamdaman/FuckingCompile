@@ -1,10 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace jfc {
     /// <summary> The main entry-point class for the application </summary>
     class Program {
+        private const string _regex = @"^[\S]*[ ]*clang version (?'version'[\S]+)\n" +
+                                      @"Target: (?'target'[\S]+)\n" +
+                                      @"Thread model: (?'thread_model'[\S]+)\n" +
+                                      @"InstalledDir: (?'install_dir'.+)$";
         private const string _helpText =
             "Just Fucking Compile - a compiler by Mason Davy\n\n" +
             "Usage:\n" +
@@ -131,16 +137,49 @@ namespace jfc {
                 return;
             }
 
+            // Now we'll try to find the clang executable
+            bool haveClang = false;
+            string clangVersion = "N/A";
+            string clangTarget = "N/A";
+            string clangThreads = "N/A";
+            string clangPath = "N/A";
+            try {
+                using Process process = new();
+                process.StartInfo.FileName = "clang";
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.ArgumentList.Add("--version");
+                process.StartInfo.RedirectStandardOutput = true;
+                process.Start();
+                string version = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                Match match = Regex.Match(version, _regex);
+                if (match.Success) {
+                    clangVersion = match.Groups["version"].Value;
+                    clangTarget = match.Groups["target"].Value;
+                    clangThreads = match.Groups["thread_model"].Value;
+                    clangPath = match.Groups["install_dir"].Value;
+                    haveClang = true;
+                } else {
+                    Console.WriteLine(" WARN: Unable to parse output from \"clang\", code generation will be skipped");
+                }
+            } catch (System.ComponentModel.Win32Exception) {
+                Console.WriteLine(" WARN: \"clang\" executable not found, code generation will be skipped");
+            }
+
             // Print starting information
             Console.WriteLine("Just Fucking Compile " + _versionText);
-            Console.WriteLine($"| Source File: \"{sourceFile}\"");
-            Console.WriteLine($"| Output File: \"{outputFile}\"");
-            Console.WriteLine($"|   Verbosity: {verbosity}\n");
+            Console.WriteLine($"| Source File        : {sourceFile}");
+            Console.WriteLine($"| Output File        : {outputFile}");
+            Console.WriteLine($"| Verbosity          : {verbosity}");
+            Console.WriteLine($"| Clang Version      : {clangVersion}");
+            Console.WriteLine($"| Clang Target       : {clangTarget}");
+            Console.WriteLine($"| Clang Thread Model : {clangThreads}");
+            Console.WriteLine($"| Clang Path         : {clangPath}\n");
 
             // Try to open the indicated file
             SourceFileReader src;
             try {
-                src = new(sourceFile); {
+                src = new(sourceFile, haveClang); {
                     src.MinReportLevel = verbosity;
                 }
             } catch (Exception) {

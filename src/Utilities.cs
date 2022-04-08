@@ -44,6 +44,9 @@ namespace jfc {
         /// <summary> The current character counts </summary>
         public int CharCount { get => _charCount; }
 
+        /// <summary> Whether or not we can compile </summary>
+        public bool CanCompile { get; set; } = true;
+
         /// <summary> The minimum message level required to be reported </summary>
         public MsgLevel MinReportLevel { get; set; } = MsgLevel.INFO;
 
@@ -55,12 +58,13 @@ namespace jfc {
 
         /// <summary> Opens the reader on the specified file </summary>
         /// <param name="sourceFile"> The file to be opened </param>
+        /// <param name="canCompile"> Whether or not the program can compile </param>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="FileNotFoundException"/>
         /// <exception cref="DirectoryNotFoundException"/>
         /// <exception cref="IOException"/>
-        public SourceFileReader(string sourceFile) {
+        public SourceFileReader(string sourceFile, bool canCompile) {
             try {
                 _fName = Path.GetFileName(sourceFile);
                 _sr = new(sourceFile);
@@ -68,6 +72,7 @@ namespace jfc {
                 Report(MsgLevel.ERROR, $"Unable to open file \"{sourceFile}\" for reading");
                 throw;
             }
+            CanCompile = canCompile;
         }
 
         /// <summary> Reads the next character </summary>
@@ -111,6 +116,9 @@ namespace jfc {
                 while (padding > 0) { sb.Append(' '); padding--; }
                 sb.Append(fileInfo);
             }
+
+            // If we have an error, indicate that we can't compile
+            if (lvl == MsgLevel.ERROR) CanCompile = false;
 
             // Report the message
             if (lvl >= MinReportLevel) Console.WriteLine(sb.ToString());
