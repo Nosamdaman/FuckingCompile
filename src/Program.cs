@@ -20,7 +20,6 @@ namespace jfc {
             "Options:\n" +
             "  -o --output OUTPUT    Set the output file for a successful compilation.\n" + 
             "                        Defaults to \"a.out\".\n" +
-            "  -D --dump-assembly    Dumps the translated LLVM Assembly to a file\n" +
             "  -V --verbosity LEVEL  Sets the verbosity level. Can be one of \"0\", \"1\", or\n" +
             "                        \"2\". Defaults to \"0\".\n" +
             "  -h --help             Show this screen\n" +
@@ -33,7 +32,6 @@ namespace jfc {
             // Initialize parameters
             string sourceFile = null;
             string outputFile = "a.out";
-            bool dumpAssembly = false;
             MsgLevel verbosity = MsgLevel.INFO;
 
             // We'll parse most of the inputs in a loop here
@@ -77,8 +75,6 @@ namespace jfc {
                     }
                     outputFile = argQueue.Dequeue();
                     continue;
-                } else if (arg == "--dump-assembly") {
-                    dumpAssembly = true;
                 }
 
                 // Next we'll try to parse an argument block
@@ -95,9 +91,6 @@ namespace jfc {
                             return;
                         case 'V':
                             verbosity = MsgLevel.DEBUG;
-                            break;
-                        case 'D':
-                            dumpAssembly = true;
                             break;
                         case 'o':
                             if (optionQueue.Count > 0) {
@@ -170,7 +163,6 @@ namespace jfc {
             Console.WriteLine("Just Fucking Compile " + _versionText);
             Console.WriteLine($"| Source File        : {sourceFile}");
             Console.WriteLine($"| Output File        : {outputFile}");
-            Console.WriteLine($"| Dump Assembly      : {(dumpAssembly ? "True" : "False")}");
             Console.WriteLine($"| Verbosity          : {verbosity}");
             Console.WriteLine($"| Clang Version      : {clangVersion}");
             Console.WriteLine($"| Clang Target       : {clangTarget}");
@@ -201,14 +193,7 @@ namespace jfc {
             }
 
             // Now we compile the program
-            string assemblyFile;
-            if (dumpAssembly) {
-                // string output = (string) status.Data;
-                // File.WriteAllText(outputFile + ".ll", output);
-                assemblyFile = outputFile + ".ll";
-            } else {
-                assemblyFile = Path.GetTempFileName();
-            }
+            string assemblyFile = outputFile + ".ll";
             File.WriteAllText(assemblyFile, (string) status.Data);
             try {
                 using Process process = new();
@@ -221,9 +206,6 @@ namespace jfc {
             } catch (System.ComponentModel.Win32Exception) {
                 Console.WriteLine("ERROR: Compilation failed");
                 Environment.ExitCode = 1;
-            }
-            if (!dumpAssembly) {
-                File.Delete(assemblyFile);
             }
 
             // Close the file
