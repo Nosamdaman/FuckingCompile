@@ -495,7 +495,7 @@ namespace jfc {
                 }
 
                 // We should be good here
-                _src.Report(MsgLevel.TRACE, "Parsed factor as symbol reference");
+                _src.Report(MsgLevel.TRACE, "Parsed factor as symbol reference", true);
                 return new(true, status.Data, status.Reg);
             }
 
