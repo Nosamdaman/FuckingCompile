@@ -164,9 +164,9 @@ namespace jfc {
         "    ; First we'll allocate for the variables we need\n" +
         "    %ptr.str = alloca [128 x i8]\n" +
         "    %ptr.count = alloca i32\n" +
-        "    %ptr.errorstr = alloca [89 x i8]\n" +
-        "    store [89 x i8] c\"Warning: Strings must be no more than 127 characters long, your input will be truncated\\0A\\00\", [89 x i8]* %ptr.errorstr\n" +
-        "    %ptr.error = getelementptr [89 x i8], [89 x i8]* %ptr.errorstr, i32 0, i32 0\n" +
+        "    %ptr.errorstr = alloca [87 x i8]\n" +
+        "    store [87 x i8] c\"Warning: Input must be no more than 127 characters long, your input will be truncated\\0A\\00\", [87 x i8]* %ptr.errorstr\n" +
+        "    %ptr.error = getelementptr [87 x i8], [87 x i8]* %ptr.errorstr, i32 0, i32 0\n" +
         "    store i32 0, i32* %ptr.count\n" +
         "    br label %read\n" +
         "\n" +

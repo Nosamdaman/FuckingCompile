@@ -162,9 +162,9 @@ define private [128 x i8] @getString() {
     ; First we'll allocate for the variables we need
     %ptr.str = alloca [128 x i8]
     %ptr.count = alloca i32
-    %ptr.errorstr = alloca [89 x i8]
-    store [89 x i8] c"Warning: Strings must be no more than 127 characters long, your input will be truncated\0A\00", [89 x i8]* %ptr.errorstr
-    %ptr.error = getelementptr [89 x i8], [89 x i8]* %ptr.errorstr, i32 0, i32 0
+    %ptr.errorstr = alloca [87 x i8]
+    store [87 x i8] c"Warning: Input must be no more than 127 characters long, your input will be truncated\0A\00", [89 x i8]* %ptr.errorstr
+    %ptr.error = getelementptr [87 x i8], [87 x i8]* %ptr.errorstr, i32 0, i32 0
     store i32 0, i32* %ptr.count
     br label %read
 
