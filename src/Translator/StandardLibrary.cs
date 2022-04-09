@@ -172,7 +172,6 @@ namespace jfc {
         "\n" +
         "    ; Block for reading characters\n" +
         "    read:\n" +
-        "    %tmp = call i32 @getchar()\n" +
         "    %1 = call i32 @getchar()\n" +
         "    %char = trunc i32 %1 to i8\n" +
         "    %cond.newline = icmp eq i8 %char, 10\n" +

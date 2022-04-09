@@ -170,7 +170,6 @@ define private [128 x i8] @getString() {
 
     ; Block for reading characters
     read:
-    %tmp = call i32 @getchar()
     %1 = call i32 @getchar()
     %char = trunc i32 %1 to i8
     %cond.newline = icmp eq i8 %char, 10
