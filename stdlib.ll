@@ -157,6 +157,68 @@ define private i32 @getInteger() {
     ret i32 %res
 }
 
+; Reads a string from the command-line
+define private [128 x i8] @getString() {
+    ; First we'll allocate for the variables we need
+    %ptr.str = alloca [128 x i8]
+    %ptr.count = alloca i32
+    %ptr.errorstr = alloca [89 x i8]
+    store [89 x i8] c"Warning: Strings must be no more than 127 characters long, your input will be truncated\0A\00", [89 x i8]* %ptr.errorstr
+    %ptr.error = getelementptr [89 x i8], [89 x i8]* %ptr.errorstr, i32 0, i32 0
+    store i32 0, i32* %ptr.count
+    br label %read
+
+    ; Block for reading characters
+    read:
+    %tmp = call i32 @getchar()
+    %1 = call i32 @getchar()
+    %char = trunc i32 %1 to i8
+    %cond.newline = icmp eq i8 %char, 10
+    br i1 %cond.newline, label %cleanup, label %checkError
+
+    ; Block to fill the rest of the string with null-terminators
+    cleanup:
+    %2 = load i32, i32* %ptr.count
+    %3 = getelementptr [128 x i8], [128 x i8]* %ptr.str, i32 0, i32 %2
+    store i8 0, i8* %3
+    %4 = add i32 %2, 1
+    store i32 %4, i32* %ptr.count
+    %5 = icmp sge i32 %4, 128
+    br i1 %5, label %end, label %cleanup
+
+    ; Check if we can add the character or not
+    checkError:
+    %6 = load i32, i32* %ptr.count
+    %7 = icmp slt i32 %6, 127
+    br i1 %7, label %insert, label %clearBuffer
+
+    ; Insert the character then move on to the next one
+    insert:
+    %8 = load i32, i32* %ptr.count
+    %9 = getelementptr [128 x i8], [128 x i8]* %ptr.str, i32 0, i32 %8
+    store i8 %char, i8* %9
+    %10 = add i32 %8, 1
+    store i32 %10, i32* %ptr.count
+    br label %read
+
+    ; Clear the buffer
+    clearBuffer:
+    %11 = call i32 @getchar()
+    %12 = trunc i32 %11 to i8
+    %13 = icmp eq i8 %12, 10
+    br i1 %13, label %overflow, label %clearBuffer
+
+    ; We have an overflow
+    overflow:
+    call i32 (i8*, ...) @printf(i8* %ptr.error)
+    br label %cleanup
+
+    ; Ends execution
+    end:
+    %str = load [128 x i8], [128 x i8]* %ptr.str
+    ret [128 x i8] %str
+}
+
 ; Converts a char to an int
 define private i32 @charToInt(i8 %char) {
     %norm = sub i8 %char, 48
@@ -175,28 +237,33 @@ define float @makef(i32 %l, i32 %r, i32 %div) {
 
 define i32 @main() {
     ; Create some constants
-    %str.nl = alloca [2 x i8]
-    store [2 x i8] c"\0A\00", [2 x i8]* %str.nl
-    %ptr.nl = getelementptr [2 x i8], [2 x i8]* %str.nl, i32 0, i32 0
+    ; %str.nl = alloca [2 x i8]
+    ; store [2 x i8] c"\0A\00", [2 x i8]* %str.nl
+    ; %ptr.nl = getelementptr [2 x i8], [2 x i8]* %str.nl, i32 0, i32 0
+    ; %
 
-    ; Print some stuff
-    %1 = call i1 @putInteger(i32 -100)
-    call i1 @putString(i8* %ptr.nl)
-    call i1 @putBool(i1 %1)
-    call i1 @putString(i8* %ptr.nl)
-    call i1 @putInteger(i32 100)
-    call i1 @putString(i8* %ptr.nl)
-    call i1 @putInteger(i32 10045)
-    call i1 @putString(i8* %ptr.nl)
-    %num0 = call float @makef(i32 2, i32 6, i32 100)
-    call i1 @putFloat(float %num0)
-    call i1 @putString(i8* %ptr.nl)
-    %num1 = call float @makef(i32 2000000, i32 6, i32 100)
-    call i1 @putFloat(float %num1)
-    call i1 @putString(i8* %ptr.nl)
-    %num2 = call float @makef(i32 0, i32 6, i32 1000000000)
-    call i1 @putFloat(float %num2)
-    call i1 @putString(i8* %ptr.nl)
+    ; ; Print some stuff
+    ; %1 = call i1 @putInteger(i32 -100)
+    ; call i1 @putString(i8* %ptr.nl)
+    ; call i1 @putBool(i1 %1)
+    ; call i1 @putString(i8* %ptr.nl)
+    ; call i1 @putInteger(i32 100)
+    ; call i1 @putString(i8* %ptr.nl)
+    ; call i1 @putInteger(i32 10045)
+    ; call i1 @putString(i8* %ptr.nl)
+    ; %num0 = call float @makef(i32 2, i32 6, i32 100)
+    ; call i1 @putFloat(float %num0)
+    ; call i1 @putString(i8* %ptr.nl)
+    ; %num1 = call float @makef(i32 2000000, i32 6, i32 100)
+    ; call i1 @putFloat(float %num1)
+    ; call i1 @putString(i8* %ptr.nl)
+    ; %num2 = call float @makef(i32 0, i32 6, i32 1000000000)
+    ; call i1 @putFloat(float %num2)
+    ; call i1 @putString(i8* %ptr.nl)
+
+    ; Get a string
+    %str = call [128 x i8] @getString()
+    call i1 @putString([128 x i8] %str)
 
     ; Return successfully
     ret i32 0
