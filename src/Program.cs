@@ -7,10 +7,10 @@ using System.Text.RegularExpressions;
 namespace jfc {
     /// <summary> The main entry-point class for the application </summary>
     class Program {
-        private const string _regex = @"^[\S]*[ ]*clang version (?'version'[\S]+)\n" +
+        private const string _regex = @"^[\S]*[ ]*clang version (?'version'[\S]+)\s*\n" +
                                       @"Target: (?'target'[\S]+)\n" +
-                                      @"Thread model: (?'thread_model'[\S]+)\n" +
-                                      @"InstalledDir: (?'install_dir'.+)$";
+                                      @"Thread model: (?'thread_model'[\S]+)\s*\n" +
+                                      @"InstalledDir: (?'install_dir'.+)\s*$";
         private const string _helpText =
             "Just Fucking Compile - a compiler by Mason Davy\n\n" +
             "Usage:\n" +
