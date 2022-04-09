@@ -4,6 +4,8 @@ target triple = "x86_64-pc-linux-gnu"
 ; Import some functions from the standard libraries
 declare i32 @printf(i8* nocapture, ...)
 declare i32 @getchar()
+declare i32 @sscanf(i8* nocapture, i8* nocapture, ...)
+declare float @llvm.sqrt.f32(float)
 
 ; Global strings
 @str.true = private constant [5 x i8] c"True\00"
@@ -157,13 +159,53 @@ define private i32 @getInteger() {
     ret i32 %res
 }
 
+; Reads a boolean from the command line
+define private i1 @getBool() {
+    %int = call i32 @getInteger()
+    %bool = icmp ne i32 %int, 0
+    ret i1 %bool
+}
+
+; Reads a floating-point number from the command-line
+define private float @getFloat() {
+    ; First we'll allocate everything as needed
+    %ptr.strstr = alloca [128 x i8]
+    %ptr.str = getelementptr [128 x i8], [128 x i8]* %ptr.strstr, i32 0, i32 0
+    %ptr.fmtstr = alloca [3 x i8]
+    store [3 x i8] c"%f\00", [3 x i8]* %ptr.fmtstr
+    %ptr.fmt = getelementptr [3 x i8], [3 x i8]* %ptr.fmtstr, i32 0, i32 0
+    %ptr.errorstr = alloca [33 x i8]
+    store [33 x i8] c"Error reading float, try again: \00", [33 x i8]* %ptr.errorstr
+    %ptr.error = getelementptr [33 x i8], [33 x i8]* %ptr.errorstr, i32 0, i32 0
+    %ptr.float = alloca float
+    br label %main
+
+    ; Main loop
+    main:
+    %str = call [128 x i8] @getString()
+    store [128 x i8] %str, [128 x i8]* %ptr.strstr
+    %res = call i32 (i8*, i8*, ...) @sscanf(i8* %ptr.str, i8* %ptr.fmt, float* %ptr.float)
+    %cond.fail = icmp slt i32 %res, 1
+    br i1 %cond.fail, label %fail, label %success
+
+    ; Failure to parse the float
+    fail:
+    call i32 (i8*, ...) @printf(i8* %ptr.error)
+    br label %main
+
+    ; Return the float
+    success:
+    %float = load float, float* %ptr.float
+    ret float %float
+}
+
 ; Reads a string from the command-line
 define private [128 x i8] @getString() {
     ; First we'll allocate for the variables we need
     %ptr.str = alloca [128 x i8]
     %ptr.count = alloca i32
     %ptr.errorstr = alloca [87 x i8]
-    store [87 x i8] c"Warning: Input must be no more than 127 characters long, your input will be truncated\0A\00", [89 x i8]* %ptr.errorstr
+    store [87 x i8] c"Warning: Input must be no more than 127 characters long, your input will be truncated\0A\00", [87 x i8]* %ptr.errorstr
     %ptr.error = getelementptr [87 x i8], [87 x i8]* %ptr.errorstr, i32 0, i32 0
     store i32 0, i32* %ptr.count
     br label %read
@@ -218,6 +260,13 @@ define private [128 x i8] @getString() {
     ret [128 x i8] %str
 }
 
+; Gets the square root of an integer
+define private float @sqrt(i32 %int) {
+    %num = sitofp i32 %int to float
+    %root = call float @llvm.sqrt.f32(float %num)
+    ret float %root
+}
+
 ; Compares two strings
 define private i1 @cmpString([128 x i8] %l, [128 x i8] %r) {
     ; Initialize memory
@@ -262,44 +311,34 @@ define private i32 @charToInt(i8 %char) {
     ret i32 %int
 }
 
-define float @makef(i32 %l, i32 %r, i32 %div) {
-    %lf = sitofp i32 %l to float
-    %rf = sitofp i32 %r to float
-    %rdiv = sitofp i32 %div to float
-    %dec = fdiv float %rf, %rdiv
-    %num = fadd float %lf, %dec
-    ret float %num
-}
-
 define i32 @main() {
     ; Create some constants
-    ; %str.nl = alloca [2 x i8]
-    ; store [2 x i8] c"\0A\00", [2 x i8]* %str.nl
-    ; %ptr.nl = getelementptr [2 x i8], [2 x i8]* %str.nl, i32 0, i32 0
-    ; %
+    %str.nl = alloca [2 x i8]
+    store [2 x i8] c"\0A\00", [2 x i8]* %str.nl
+    %ptr.nl = getelementptr [2 x i8], [2 x i8]* %str.nl, i32 0, i32 0
 
-    ; ; Print some stuff
-    ; %1 = call i1 @putInteger(i32 -100)
-    ; call i1 @putString(i8* %ptr.nl)
-    ; call i1 @putBool(i1 %1)
-    ; call i1 @putString(i8* %ptr.nl)
-    ; call i1 @putInteger(i32 100)
-    ; call i1 @putString(i8* %ptr.nl)
-    ; call i1 @putInteger(i32 10045)
-    ; call i1 @putString(i8* %ptr.nl)
-    ; %num0 = call float @makef(i32 2, i32 6, i32 100)
-    ; call i1 @putFloat(float %num0)
-    ; call i1 @putString(i8* %ptr.nl)
-    ; %num1 = call float @makef(i32 2000000, i32 6, i32 100)
-    ; call i1 @putFloat(float %num1)
-    ; call i1 @putString(i8* %ptr.nl)
-    ; %num2 = call float @makef(i32 0, i32 6, i32 1000000000)
-    ; call i1 @putFloat(float %num2)
-    ; call i1 @putString(i8* %ptr.nl)
+    ; Get an integer
+    %int = call i32 @getInteger()
+    call i1 @putInteger(i32 %int)
+    call i32 (i8*, ...) @printf(i8* %ptr.nl)
+    %root = call float @sqrt(i32 %int)
+    call i1 @putFloat(float %root)
+    call i32 (i8*, ...) @printf(i8* %ptr.nl)
+
+    ; Get a boolean
+    %bool = call i1 @getBool()
+    call i1 @putBool(i1 %bool)
+    call i32 (i8*, ...) @printf(i8* %ptr.nl)
+
+    ; Get a float
+    %float = call float @getFloat()
+    call i1 @putFloat(float %float)
+    call i32 (i8*, ...) @printf(i8* %ptr.nl)
 
     ; Get a string
     %str = call [128 x i8] @getString()
     call i1 @putString([128 x i8] %str)
+    call i32 (i8*, ...) @printf(i8* %ptr.nl)
 
     ; Return successfully
     ret i32 0

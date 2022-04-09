@@ -2,10 +2,13 @@ namespace jfc {
     /// <summary> Class responsible for translating the source code to LLVM IR </summary>
     public partial class Translator {
         private readonly string _lib =
-        "; The following is an implementation of the language's standard library \n\n" +
+        "; The following is an implementation of the language's standard library in LLVM assembly\n" +
+        "\n" +
         "; Import some functions from the standard libraries\n" +
         "declare i32 @printf(i8* nocapture, ...)\n" +
         "declare i32 @getchar()\n" +
+        "declare i32 @sscanf(i8* nocapture, i8* nocapture, ...)\n" +
+        "declare float @llvm.sqrt.f32(float)\n" +
         "\n" +
         "; Global strings\n" +
         "@str.true = private constant [5 x i8] c\"True\\00\"\n" +
@@ -81,7 +84,7 @@ namespace jfc {
         "    %ptr = alloca i32\n" +
         "    store i32 0, i32* %ptr\n" +
         "\n" +
-        "    ; This block is essentially the same as the main block, accept we'll handle the first character abit          differently\n" +
+        "    ; This block is essentially the same as the main block, accept we'll handle the first character a bit differently\n" +
         "    %signPtr = alloca i32\n" +
         "    %int0 = call i32 @getchar()\n" +
         "    %char0 = trunc i32 %int0 to i8\n" +
@@ -151,12 +154,52 @@ namespace jfc {
         "    %errchar = trunc i32 %errint to i8\n" +
         "    %conderr = icmp eq i8 %errchar, 10\n" +
         "    br i1 %conderr, label %errorend, label %error\n" +
-
+        "\n" +
         "    ; Print a message and try again\n" +
         "    errorend:\n" +
         "    call i32 (i8*, ...) @printf(i8* %errMsgPtr)\n" +
         "    %res = call i32 @getInteger()\n" +
         "    ret i32 %res\n" +
+        "}\n" +
+        "\n" +
+        "; Reads a boolean from the command line\n" +
+        "define private i1 @getBool() {\n" +
+        "    %int = call i32 @getInteger()\n" +
+        "    %bool = icmp ne i32 %int, 0\n" +
+        "    ret i1 %bool\n" +
+        "}\n" +
+        "\n" +
+        "; Reads a floating-point number from the command-line\n" +
+        "define private float @getFloat() {\n" +
+        "    ; First we'll allocate everything as needed\n" +
+        "    %ptr.strstr = alloca [128 x i8]\n" +
+        "    %ptr.str = getelementptr [128 x i8], [128 x i8]* %ptr.strstr, i32 0, i32 0\n" +
+        "    %ptr.fmtstr = alloca [3 x i8]\n" +
+        "    store [3 x i8] c\"%f\\00\", [3 x i8]* %ptr.fmtstr\n" +
+        "    %ptr.fmt = getelementptr [3 x i8], [3 x i8]* %ptr.fmtstr, i32 0, i32 0\n" +
+        "    %ptr.errorstr = alloca [33 x i8]\n" +
+        "    store [33 x i8] c\"Error reading float, try again: \\00\", [33 x i8]* %ptr.errorstr\n" +
+        "    %ptr.error = getelementptr [33 x i8], [33 x i8]* %ptr.errorstr, i32 0, i32 0\n" +
+        "    %ptr.float = alloca float\n" +
+        "    br label %main\n" +
+        "\n" +
+        "    ; Main loop\n" +
+        "    main:\n" +
+        "    %str = call [128 x i8] @getString()\n" +
+        "    store [128 x i8] %str, [128 x i8]* %ptr.strstr\n" +
+        "    %res = call i32 (i8*, i8*, ...) @sscanf(i8* %ptr.str, i8* %ptr.fmt, float* %ptr.float)\n" +
+        "    %cond.fail = icmp slt i32 %res, 1\n" +
+        "    br i1 %cond.fail, label %fail, label %success\n" +
+        "\n" +
+        "    ; Failure to parse the float\n" +
+        "    fail:\n" +
+        "    call i32 (i8*, ...) @printf(i8* %ptr.error)\n" +
+        "    br label %main\n" +
+        "\n" +
+        "    ; Return the float\n" +
+        "    success:\n" +
+        "    %float = load float, float* %ptr.float\n" +
+        "    ret float %float\n" +
         "}\n" +
         "\n" +
         "; Reads a string from the command-line\n" +
@@ -218,6 +261,13 @@ namespace jfc {
         "    end:\n" +
         "    %str = load [128 x i8], [128 x i8]* %ptr.str\n" +
         "    ret [128 x i8] %str\n" +
+        "}\n" +
+        "\n" +
+        "; Gets the square root of an integer\n" +
+        "define private float @sqrt(i32 %int) {\n" +
+        "    %num = sitofp i32 %int to float\n" +
+        "    %root = call float @llvm.sqrt.f32(float %num)\n" +
+        "    ret float %root\n" +
         "}\n" +
         "\n" +
         "; Compares two strings\n" +
