@@ -151,12 +151,111 @@ namespace jfc {
         "    %errchar = trunc i32 %errint to i8\n" +
         "    %conderr = icmp eq i8 %errchar, 10\n" +
         "    br i1 %conderr, label %errorend, label %error\n" +
-        "\n" +
+
         "    ; Print a message and try again\n" +
         "    errorend:\n" +
         "    call i32 (i8*, ...) @printf(i8* %errMsgPtr)\n" +
         "    %res = call i32 @getInteger()\n" +
         "    ret i32 %res\n" +
+        "}\n" +
+        "\n" +
+        "; Reads a string from the command-line\n" +
+        "define private [128 x i8] @getString() {\n" +
+        "    ; First we'll allocate for the variables we need\n" +
+        "    %ptr.str = alloca [128 x i8]\n" +
+        "    %ptr.count = alloca i32\n" +
+        "    %ptr.errorstr = alloca [89 x i8]\n" +
+        "    store [89 x i8] c\"Warning: Strings must be no more than 127 characters long, your input will be truncated\\0A\\00\", [89 x i8]* %ptr.errorstr\n" +
+        "    %ptr.error = getelementptr [89 x i8], [89 x i8]* %ptr.errorstr, i32 0, i32 0\n" +
+        "    store i32 0, i32* %ptr.count\n" +
+        "    br label %read\n" +
+        "\n" +
+        "    ; Block for reading characters\n" +
+        "    read:\n" +
+        "    %tmp = call i32 @getchar()\n" +
+        "    %1 = call i32 @getchar()\n" +
+        "    %char = trunc i32 %1 to i8\n" +
+        "    %cond.newline = icmp eq i8 %char, 10\n" +
+        "    br i1 %cond.newline, label %cleanup, label %checkError\n" +
+        "\n" +
+        "    ; Block to fill the rest of the string with null-terminators\n" +
+        "    cleanup:\n" +
+        "    %2 = load i32, i32* %ptr.count\n" +
+        "    %3 = getelementptr [128 x i8], [128 x i8]* %ptr.str, i32 0, i32 %2\n" +
+        "    store i8 0, i8* %3\n" +
+        "    %4 = add i32 %2, 1\n" +
+        "    store i32 %4, i32* %ptr.count\n" +
+        "    %5 = icmp sge i32 %4, 128\n" +
+        "    br i1 %5, label %end, label %cleanup\n" +
+        "\n" +
+        "    ; Check if we can add the character or not\n" +
+        "    checkError:\n" +
+        "    %6 = load i32, i32* %ptr.count\n" +
+        "    %7 = icmp slt i32 %6, 127\n" +
+        "    br i1 %7, label %insert, label %clearBuffer\n" +
+        "\n" +
+        "    ; Insert the character then move on to the next one\n" +
+        "    insert:\n" +
+        "    %8 = load i32, i32* %ptr.count\n" +
+        "    %9 = getelementptr [128 x i8], [128 x i8]* %ptr.str, i32 0, i32 %8\n" +
+        "    store i8 %char, i8* %9\n" +
+        "    %10 = add i32 %8, 1\n" +
+        "    store i32 %10, i32* %ptr.count\n" +
+        "    br label %read\n" +
+        "\n" +
+        "    ; Clear the buffer\n" +
+        "    clearBuffer:\n" +
+        "    %11 = call i32 @getchar()\n" +
+        "    %12 = trunc i32 %11 to i8\n" +
+        "    %13 = icmp eq i8 %12, 10\n" +
+        "    br i1 %13, label %overflow, label %clearBuffer\n" +
+        "\n" +
+        "    ; We have an overflow\n" +
+        "    overflow:\n" +
+        "    call i32 (i8*, ...) @printf(i8* %ptr.error)\n" +
+        "    br label %cleanup\n" +
+        "\n" +
+        "    ; Ends execution\n" +
+        "    end:\n" +
+        "    %str = load [128 x i8], [128 x i8]* %ptr.str\n" +
+        "    ret [128 x i8] %str\n" +
+        "}\n" +
+        "\n" +
+        "; Compares two strings\n" +
+        "define private i1 @cmpString([128 x i8] %l, [128 x i8] %r) {\n" +
+        "    ; Initialize memory\n" +
+        "    %ptr.l = alloca [128 x i8]\n" +
+        "    store [128 x i8] %l, [128 x i8]* %ptr.l\n" +
+        "    %ptr.r = alloca [128 x i8]\n" +
+        "    store [128 x i8] %r, [128 x i8]* %ptr.r\n" +
+        "    %ptr.count = alloca i32\n" +
+        "    store i32 0, i32* %ptr.count\n" +
+        "    br label %loop\n" +
+        "\n" +
+        "    ; Compare the strings\n" +
+        "    loop:\n" +
+        "    %1 = load i32, i32* %ptr.count\n" +
+        "    %2 = getelementptr [128 x i8], [128 x i8]* %ptr.l, i32 0, i32 %1\n" +
+        "    %3 = load i8, i8* %2\n" +
+        "    %4 = getelementptr [128 x i8], [128 x i8]* %ptr.r, i32 0, i32 %1\n" +
+        "    %5 = load i8, i8* %4\n" +
+        "    %cond.eq = icmp eq i8 %3, %5\n" +
+        "    br i1 %cond.eq, label %next, label %endFalse\n" +
+        "\n" +
+        "    ; Go to the next loop iteration or end\n" +
+        "    next:\n" +
+        "    %6 = add i32 %1, 1\n" +
+        "    store i32 %6, i32* %ptr.count\n" +
+        "    %cond.end = icmp sge i32 %6, 128\n" +
+        "    br i1 %cond.end, label %endTrue, label %loop\n" +
+        "\n" +
+        "    ; Strings are not equal\n" +
+        "    endFalse:\n" +
+        "    ret i1 false\n" +
+        "\n" +
+        "    ; Strings are equal\n" +
+        "    endTrue:\n" +
+        "    ret i1 true\n" +
         "}\n" +
         "\n" +
         "; Converts a char to an int\n" +

@@ -114,12 +114,20 @@ namespace jfc {
         }
 
         /// <summary> Compares two strings </summary>
-        public string RelationString() {
+        public string RelationString(TokenType operation, string l, string r) {
             StringBuilder sb = GetBuilder();
-            string result = GetNextTemp();
-            sb.Append($"\t{result} TODO: String Relations");
-            sb.AppendLine($" ; Relation");
-            return result;
+            string tmp = GetNextTemp();
+            string res;
+            sb.AppendLine($"\t{tmp} = call i1 @cmpString([128 x i8] {l}, [128 x i8] {r}) ; Compare strings");
+            if (operation == TokenType.EQ) {
+                res = tmp;
+            } else if (operation == TokenType.NEQ) {
+                res = GetNextTemp();
+                sb.AppendLine($"\t{res} = add i1 {tmp}, 1 ; Invert the comparison result");
+            } else {
+                throw new System.Exception("How the fuck did you even get here?");
+            }
+            return res;
         }
 
         /// <summary> Adds or subracts two values </summary>

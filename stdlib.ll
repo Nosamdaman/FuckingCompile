@@ -219,6 +219,43 @@ define private [128 x i8] @getString() {
     ret [128 x i8] %str
 }
 
+; Compares two strings
+define private i1 @cmpString([128 x i8] %l, [128 x i8] %r) {
+    ; Initialize memory
+    %ptr.l = alloca [128 x i8]
+    store [128 x i8] %l, [128 x i8]* %ptr.l
+    %ptr.r = alloca [128 x i8]
+    store [128 x i8] %r, [128 x i8]* %ptr.r
+    %ptr.count = alloca i32
+    store i32 0, i32* %ptr.count
+    br label %loop
+
+    ; Compare the strings
+    loop:
+    %1 = load i32, i32* %ptr.count
+    %2 = getelementptr [128 x i8], [128 x i8]* %ptr.l, i32 0, i32 %1
+    %3 = load i8, i8* %2
+    %4 = getelementptr [128 x i8], [128 x i8]* %ptr.r, i32 0, i32 %1
+    %5 = load i8, i8* %4
+    %cond.eq = icmp eq i8 %3, %5
+    br i1 %cond.eq, label %next, label %endFalse
+
+    ; Go to the next loop iteration or end
+    next:
+    %6 = add i32 %1, 1
+    store i32 %6, i32* %ptr.count
+    %cond.end = icmp sge i32 %6, 128
+    br i1 %cond.end, label %endTrue, label %loop
+
+    ; Strings are not equal
+    endFalse:
+    ret i1 false
+
+    ; Strings are equal
+    endTrue:
+    ret i1 true
+}
+
 ; Converts a char to an int
 define private i32 @charToInt(i8 %char) {
     %norm = sub i8 %char, 48

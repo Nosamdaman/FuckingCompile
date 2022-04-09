@@ -339,7 +339,7 @@ namespace jfc {
             // Now we'll actually convert the relation to assembly
             string tmp;
             if (lDataType == DataType.STRING) {
-                tmp = _translator.RelationString();
+                tmp = _translator.RelationString(op, lReg, rReg);
             } else {
                 tmp = _translator.Relation(op, lReg, rReg, dt, lArraySize, rArraySize);
             }

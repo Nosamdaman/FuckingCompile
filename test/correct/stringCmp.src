@@ -1,0 +1,21 @@
+program CompareStrings is
+
+variable str0 : string;
+variable str1 : string;
+variable result : bool;
+
+begin
+
+str0 := "Test String";
+str1 := "Test String with a cherry on top";
+
+result := putBool(str0 == str0);
+result := putString("\n");
+result := putBool(str0 == str1);
+result := putString("\n");
+result := putBool(str0 != str0);
+result := putString("\n");
+result := putBool(str0 != str1);
+result := putString("\n");
+
+end program .
