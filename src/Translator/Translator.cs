@@ -277,6 +277,15 @@ namespace jfc {
             BasicBlock(lblEnd);
         }
 
+        /// <summary> Return statement </summary>
+        public void Return(string reg, DataType dataType) {
+            // We need to increment our temp counter here as calls to return count as unnamed register assignments
+            GetNextTemp();
+            StringBuilder sb = GetBuilder();
+            string dt = GetDataType(dataType, 0);
+            sb.AppendLine($"\tret {dt} {reg}\n");
+        }
+
         /// <summary> Creates a new basic block </summary>
         public void BasicBlock(string lbl) {
             StringBuilder sb = GetBuilder();

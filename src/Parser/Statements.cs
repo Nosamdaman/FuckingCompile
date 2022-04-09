@@ -289,6 +289,8 @@ namespace jfc {
         /// <param name="returnType"> The expected return type of this statement </param>
         /// <returns> A ParseInfo with no special data </returns>
         private ParseInfo ReturnStatement(DataType returnType) {
+            _translator.Comment("\t; Begin return statement");
+
             // First we expect the return keyword
             if (_curToken.TokenType != TokenType.RETURN_RW) {
                 _src.Report(MsgLevel.ERROR, "Expected \"RETURN\"", true);
@@ -316,6 +318,19 @@ namespace jfc {
                 _src.Report(MsgLevel.ERROR, "Cannot return an array", true);
                 return new(false);
             }
+
+            // Perform any conversions and translate the statement
+            string reg = status.Reg;
+            if (returnType == DataType.BOOL && dataType == DataType.INTEGER) {
+                reg = _translator.IntToBool(reg, 0);
+            } else if (returnType == DataType.INTEGER && dataType == DataType.BOOL) {
+                reg = _translator.BoolToInt(reg, 0);
+            } else if (returnType == DataType.INTEGER && dataType == DataType.FLOAT) {
+                reg = _translator.FloatToInt(reg, 0);
+            } else if (returnType == DataType.FLOAT && dataType == DataType.INTEGER) {
+                reg = _translator.IntToFloat(reg, 0);
+            }
+            _translator.Return(reg, returnType);
 
             // We should be good to go
             _src.Report(MsgLevel.TRACE, "Parsed return statement", true);

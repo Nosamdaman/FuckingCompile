@@ -30,10 +30,13 @@ end procedure;
 begin
 
 max := getInteger();
+out := putString("Sequence:");
 for(i := 0; i < max)
 	x := Fib(i);
+	out := putString(" ");
 	out := putInteger(x);
 	i := i + 1;
 end for;
+out := putString("\n");
 
 end program.
