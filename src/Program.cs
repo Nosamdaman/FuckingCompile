@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace jfc {
@@ -31,7 +32,7 @@ namespace jfc {
         static void Main(string[] args) {
             // Initialize parameters
             string sourceFile = null;
-            string outputFile = "a.out";
+            string outputFile = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "a.exe" : "a.out";
             MsgLevel verbosity = MsgLevel.INFO;
 
             // We'll parse most of the inputs in a loop here
