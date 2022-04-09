@@ -172,7 +172,7 @@ namespace jfc {
             // Try to open the indicated file
             SourceFileReader src;
             try {
-                src = new(sourceFile, haveClang); {
+                src = new(sourceFile); {
                     src.MinReportLevel = verbosity;
                 }
             } catch (Exception) {
@@ -185,7 +185,7 @@ namespace jfc {
             ParseInfo status = parser.Program();
 
             // Finish up
-            if (!status.Success || !src.CanCompile) {
+            if (!status.Success) {
                 src.Report(MsgLevel.ERROR, "Unable to successfully parse the program, aborting execution");
                 Environment.ExitCode = 1;
                 src.Dispose();
@@ -195,17 +195,19 @@ namespace jfc {
             // Now we compile the program
             string assemblyFile = outputFile + ".ll";
             File.WriteAllText(assemblyFile, (string) status.Data);
-            try {
-                using Process process = new();
-                process.StartInfo.FileName = "clang";
-                process.StartInfo.ArgumentList.Add("-o");
-                process.StartInfo.ArgumentList.Add(outputFile);
-                process.StartInfo.ArgumentList.Add(assemblyFile);
-                process.Start();
-                process.WaitForExit();
-            } catch (System.ComponentModel.Win32Exception) {
-                Console.WriteLine("ERROR: Compilation failed");
-                Environment.ExitCode = 1;
+            if (haveClang) {
+                try {
+                    using Process process = new();
+                    process.StartInfo.FileName = "clang";
+                    process.StartInfo.ArgumentList.Add("-o");
+                    process.StartInfo.ArgumentList.Add(outputFile);
+                    process.StartInfo.ArgumentList.Add(assemblyFile);
+                    process.Start();
+                    process.WaitForExit();
+                } catch (System.ComponentModel.Win32Exception) {
+                    Console.WriteLine("ERROR: Compilation failed");
+                    Environment.ExitCode = 1;
+                }
             }
 
             // Close the file
