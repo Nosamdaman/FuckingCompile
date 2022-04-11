@@ -16,3 +16,31 @@ There are two main design patterns in LLVM Assembly for storing collections of m
 LLVM Assembly floating-points are massive pain. Floating point literals can be specified normally, ie `1.0` or `1e-12`, but only if those literals represent the exact numeric value that the IEEE 754 floating point representation will contain. For example, `1.0` is fine, but `2.2` will cause compilation to fail. To get around this, you can specify floating-point literals as 16-digit hexadecimal numbers as described [here](https://llvm.org/docs/LangRef.html#simple-constants). *However*, if you are targeting a 64-bit cpu, this you cannot just use the 8-digit representation of the floating-point value with 8 more trailing zeros. Your code will compile, but the numbers will be wrong. I don't know why exactly, but that's how it is. Instead, you will want to take the full 16-digit double representation of your number and change the last 7 digits to 0. This seems to be working for me in my testing
 ## Intrinics
 There is a huge library of LLVM intrisic functions documented [here](https://llvm.org/docs/LangRef.html#intrinsic-functions). These can provide a ton of useful math functionality but be warned, not all of them will be work on your machine. Some of them are templates which allow you to perform math on arbitrarily-sized values and vectors. However, it you will get a linker error unless the specific template exists for the LLVM library you're compiling against. Whether or not a function will exist seems to depend on your hardware. ie, no 1024 bit wide floats.
+## Unnamed Identifiers
+Identifier naming is described in detail [here](https://llvm.org/docs/LangRef.html#identifiers), but there are few things left to mention related to unnamed identifiers. Unnamed identifers are local registers defined as `#[number]`. Unnamed identifiers must be defined sequentially starting at 0. The counter resets for each funtion scope. Crucially, there are a few situations in which an unnamed identifer will be created without and explicit definition. The initial unnamed basic block of any function will be implicitly defined using an unnamed identifer, and this will usually be 0. Furthermore, return statements also create an unnamed identifier, so you must increment accodingly.
+
+This will fail to comile:
+```
+#14 = mul i32 #13, #12
+ret i32 #14
+
+block:
+#15 = i32 4
+```
+
+While this will compile:
+```
+#14 = mul i32 #13, #12
+ret i32 #14
+
+block:
+#16 = i32 4
+```
+## Variable Argument Functions
+If you are using the c standard library for access to IO functions such as `printf` and `getc` like I am, be aware that there is a special syntax that must be used when importing symbols that accept a variable number of arguments. As far as I could tell, this syntax is never explicitly defined or explained in the documentation:
+```
+declare i32 @printf(i8* nocapture, ...) ; Declare printf
+...
+call i32 (i8*, ...) @printf(i8* #ptr) ; Call with no additional arguments
+call i32 (i8*, ...) @printf(i8* #ptr, i32 #num) ; Call with one additional argument
+```
