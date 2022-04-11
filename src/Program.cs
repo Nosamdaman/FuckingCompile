@@ -21,6 +21,7 @@ namespace jfc {
             "Options:\n" +
             "  -o --output OUTPUT    Set the output file for a successful compilation.\n" + 
             "                        Defaults to \"a.out\".\n" +
+            "  -n --no-compile       Don't attempt to compile the LLVM assembly with clang\n" +
             "  -V --verbosity LEVEL  Sets the verbosity level. Can be one of \"0\", \"1\", or\n" +
             "                        \"2\". Defaults to \"0\".\n" +
             "  -h --help             Show this screen\n" +
@@ -33,6 +34,7 @@ namespace jfc {
             // Initialize parameters
             string sourceFile = null;
             string outputFile = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "a.exe" : "a.out";
+            bool tryCompile = true;
             MsgLevel verbosity = MsgLevel.INFO;
 
             // We'll parse most of the inputs in a loop here
@@ -47,6 +49,9 @@ namespace jfc {
                 } else if (arg == "--version") {
                     Console.WriteLine(_versionText);
                     return;
+                } else if (arg == "--no-compile") {
+                    tryCompile = false;
+                    continue;
                 } else if (arg == "--verbosity") {
                     if (argQueue.Count == 0) {
                         Console.WriteLine(" WARN: No verbosity level specified after \"--verbosity\"");
@@ -90,6 +95,9 @@ namespace jfc {
                         case 'v':
                             Console.WriteLine(_versionText);
                             return;
+                        case 'n':
+                            tryCompile = false;
+                            break;
                         case 'V':
                             verbosity = MsgLevel.DEBUG;
                             break;
@@ -165,6 +173,7 @@ namespace jfc {
             Console.WriteLine($"| Source File        : {sourceFile}");
             Console.WriteLine($"| Output File        : {outputFile}");
             Console.WriteLine($"| Verbosity          : {verbosity}");
+            Console.WriteLine($"| Compile Executable : {(tryCompile ? "Yes" : "No")}");
             Console.WriteLine($"| Clang Version      : {clangVersion}");
             Console.WriteLine($"| Clang Target       : {clangTarget}");
             Console.WriteLine($"| Clang Thread Model : {clangThreads}");
@@ -196,7 +205,7 @@ namespace jfc {
             // Now we compile the program
             string assemblyFile = outputFile + ".ll";
             File.WriteAllText(assemblyFile, (string) status.Data);
-            if (haveClang) {
+            if (haveClang && tryCompile) {
                 try {
                     using Process process = new();
                     process.StartInfo.FileName = "clang";

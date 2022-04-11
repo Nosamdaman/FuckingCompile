@@ -144,7 +144,14 @@ namespace jfc {
                         break;
                     }
                 }
-                return new(TokenType.STRING, sb.ToString());
+
+                // Ensure the string isn't too long
+                string str = sb.ToString();
+                if (str.Length > 127) {
+                    str = str[0..127];
+                    _src.Report(MsgLevel.WARN, "String literal is too long, it will be truncated", true);
+                }
+                return new(TokenType.STRING, str);
             }
 
             // Now we'll handle the "/" symbol. This can either mean division or be the start of a comment.
