@@ -6,3 +6,5 @@ This program targets .NET 5, and you therefore must have the .NET 5 SDK installe
 - Linux: `dotnet publish -r linux-x64 -c Release --self-contained true -p:PublishSingleFile=true`
 
 This will build a single `jfc` executable that you can run like any other command-line application.
+
+Note that the Windows build of this project will not produce valid LLVM assembly thanks to Microsoft's mangling of standard library symbols. It may work if you target something like `mingw` or `Cygwin`, but I have yet to test it.
