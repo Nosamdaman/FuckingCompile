@@ -44,6 +44,9 @@ namespace jfc {
         /// <summary> The current character counts </summary>
         public int CharCount { get => _charCount; }
 
+        /// <summary> Whether or not an error has been found </summary>
+        public bool ErrorFound { get; private set; } = false;
+
         /// <summary> The minimum message level required to be reported </summary>
         public MsgLevel MinReportLevel { get; set; } = MsgLevel.INFO;
 
@@ -111,6 +114,9 @@ namespace jfc {
                 while (padding > 0) { sb.Append(' '); padding--; }
                 sb.Append(fileInfo);
             }
+
+            // If it's an error, update the flag
+            if (lvl == MsgLevel.ERROR) ErrorFound = true;
 
             // Report the message
             if (lvl >= MinReportLevel) Console.WriteLine(sb.ToString());

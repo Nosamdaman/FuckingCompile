@@ -179,7 +179,19 @@ namespace jfc {
             // Then we need a statement list
             status = StatementList(new[] { TokenType.END_RW, TokenType.EOF }, returnType);
             if (!status.Success) {
+                // If we have an error here, we'll try to recover
                 _src.Report(MsgLevel.DEBUG, "Statement list expected after \"BEGIN\"", true);
+                do {
+                    if (_curToken.TokenType == TokenType.END_RW) {
+                        NextToken();
+                        if (_curToken.TokenType == TokenType.PROGRAM_RW) {
+                            _src.Report(MsgLevel.INFO, "Recovered from parse error", true);
+                            NextToken();
+                            return new(true);
+                        }
+                    }
+                    NextToken();
+                } while (_curToken.TokenType != TokenType.EOF);
                 return new(false);
             }
 
